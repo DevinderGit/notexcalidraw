@@ -3,6 +3,7 @@ import { contextBridge, ipcRenderer } from "electron";
 import type {
   DesktopBridge,
   DesktopRecentFile,
+  DesktopTheme,
   FileFilter,
   MenuCommandId,
   OpenResult,
@@ -207,6 +208,15 @@ const bridge: DesktopBridge = {
       name: state?.name === null ? null : sanitizePath(state?.name),
       dirty: state?.dirty === true,
     });
+  },
+
+  setTheme: (theme) => {
+    const value: DesktopTheme =
+      theme === "dark" || theme === "light" || theme === "system"
+        ? theme
+        : "system";
+
+    void ipcRenderer.invoke("desktop:app:theme", value);
   },
 
   onConfirmClose: (handler) => {

@@ -178,7 +178,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - Persist window bounds as JSON in `app.getPath("userData")/window-state.json` (hand-rolled, no dep): save on `close`, restore on create (validate on-screen bounds against `screen.getDisplayMatching`).
   - Sync `nativeTheme.themeSource` from renderer theme (listen for `desktop:app:theme` in same IPC channel family) → dark titlebar on Windows.
 - **AC**:
-  - [ ] Resize/move → relaunch restores bounds; title shows `•` prefix when dirty (verified end-to-end after D-25).
+  - [x] Resize/move → relaunch restores bounds; title shows `•` prefix when dirty (verified end-to-end after D-25).
 
 #### D-12 | Navigation & window-open hardening
 

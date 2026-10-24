@@ -27,7 +27,8 @@ This workspace holds everything we build: the Electron main process, the preload
 | D-08 Main process skeleton | ✅ done | `windows.ts` security posture, single-instance lock |
 | D-09 `app://` privileged scheme | ✅ done | `protocol.ts` — editor now renders at `app://excalidraw` |
 | D-10 Preload bridge + frozen contract | ✅ done | `window.excalidrawDesktop` live in the page |
-| D-11 Window chrome (title, bounds, theme) | ⏳ next | Phase 1 — title bar reflects the document |
+| D-11 Window chrome (title, bounds, theme) | ✅ done | Title reflects the document; geometry persists |
+| D-12 Navigation & window-open hardening | ⏳ next | Phase 1 — external links leave the app |
 
 The workspace is scaffolded (D-06), but it holds no application code yet — `src/` is an empty skeleton. The Electron sources land from **D-07** onward: `main.ts` + `preload.ts` (D-07), `windows.ts` (D-08), `protocol.ts` (D-09), `bridge-contract.ts` (D-10).
 
@@ -93,8 +94,9 @@ packages/desktop/                     ← this workspace (all new desktop code)
   src/electron/preload.ts             contextBridge preload                (D-07 → D-10)
   src/electron/windows.ts             main window + security posture       (D-08)
   src/electron/protocol.ts            the `app://` protocol handler         (D-09)
+  src/electron/ipc/app.ts             desktop:app:* handlers (title, theme) (D-11)
   src/electron/                       menu.ts,
-                                      ipc/                       (lands in D-24…D-21)
+                                      ipc/fs.ts                   (lands in D-21…D-24)
   scripts/build-electron.mjs          esbuild bundler (main + preload)     (D-07)
   src/shared/bridge-contract.ts       the frozen DesktopBridge contract    (D-10)
   src/renderer/global.d.ts            Window type augmentation             (D-10)
@@ -242,7 +244,15 @@ Anything else under `excalidraw-app/` or `packages/` requires a **new** desktop-
 5. Ask before implementing; wait for confirmation.
 6. Update `docs/TaskList.md` only after the implementation is verified by a human — check off ACs, and add no commentary, timestamps or history.
 
-## 9. Related documents
+## 9. Where the app stores things
+
+| What | Where | Notes |
+| --- | --- | --- |
+| Window geometry | `window-state.json` in the Electron `userData` dir | Written on close, restored on launch, and discarded if the saved position is no longer on a connected display. |
+| Scene, UI state, theme | `localStorage` in the renderer | Inherited from upstream — Chromium's profile, i.e. `%APPDATA%/Excalidraw` in a packaged build. |
+| Binary files (images) | IndexedDB `files-db` | Inherited from upstream. |
+
+## 10. Related documents
 
 | Document | Contents |
 | --- | --- |

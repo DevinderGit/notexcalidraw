@@ -100,6 +100,12 @@ export type MenuCommandId =
   | "help:about";
 
 /**
+ * The renderer's colour theme, mirrored into the native chrome so the Windows
+ * title bar matches the app (PU §5.7).
+ */
+export type DesktopTheme = "light" | "dark" | "system";
+
+/**
  * The bridge exposed on `window.excalidrawDesktop`.
  */
 export interface DesktopBridge {
@@ -132,6 +138,14 @@ export interface DesktopBridge {
   openExternal(url: string): void; // main allowlists https: only
   /** window state */
   setDocumentState(state: { name: string | null; dirty: boolean }): void;
+  /**
+   * Mirror the renderer's colour theme into the native chrome (D-11).
+   *
+   * Added after the contract was frozen in D-10. PU §5.3 permits *additions* —
+   * "new capabilities are added, never reshaped" — and no existing member is
+   * changed by this one.
+   */
+  setTheme(theme: DesktopTheme): void;
   /** close-flow negotiation (D-27) */
   onConfirmClose(
     handler: () => Promise<"save" | "discard" | "cancel">,

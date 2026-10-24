@@ -20,6 +20,7 @@ import {
   registerAppSchemePrivileges,
   resolveWebappRoot,
 } from "./protocol";
+import { registerAppIpcHandlers } from "./ipc/app";
 import { createMainWindow } from "./windows";
 
 // Chromium reads the privileged-scheme list while the browser process starts
@@ -53,6 +54,7 @@ if (!hasSingleInstanceLock) {
   app.whenReady().then(() => {
     // `protocol.handle` is only available once the browser process is up.
     registerAppProtocol(resolveWebappRoot());
+    registerAppIpcHandlers();
     createMainWindow();
   });
 
