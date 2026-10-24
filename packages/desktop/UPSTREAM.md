@@ -23,10 +23,12 @@ invalidates every `packages/desktop/**` line-number reference in `TaskList.md`.
 
 ## 2. Branch model
 
-| Branch | Purpose |
+| Branch / ref | Purpose |
 |---|---|
 | `desktop-v1` | Long-lived integration branch. All desktop work lands here. Its base is the pinned commit. |
-| `master` | Local mirror of upstream's development line, fetched for diffing. Not a working branch. |
+| `upstream/master` | Remote-tracking ref for upstream's development line, fetched for diffing. Not a working branch — never commit to it. |
+| `v*` tags | Upstream release tags, fetched from `upstream`. Sync targets (§3). |
+| `main` | Local-only branch holding the initial project-docs import commit. Not a working branch; it will be repointed at the pinned commit (or dropped) before the first push to `origin`. |
 
 Rules:
 
