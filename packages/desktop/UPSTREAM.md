@@ -41,6 +41,21 @@ Rules:
 - Upstream's own feature branches (`zsviczian-*`, `refs/heads/*` fan-out) are never
   tracked. Only `master` and `v*` tags are fetched.
 
+### 2.1 Branches on the GitHub fork
+
+`https://github.com/DevinderGit/notexcalidraw` currently carries three branches:
+
+| Remote branch | Points at | Purpose |
+|---|---|---|
+| `origin/desktop-v1` | our commits, on top of the pin | **The working branch.** All desktop work lands here. |
+| `origin/main` | the pinned commit `ed10ac7d` | Mirror of the upstream baseline; the fork's base for diffing. |
+| `origin/master` | upstream's current HEAD (`b7de45e8` at fork time) | **Auto-created by GitHub when the fork was made.** Not ours, not a sync target. |
+
+> ⚠️ `origin/master` is **not** a sync target. It is upstream's moving development line
+> and moves independently of our pin. Sync targets are release tags on our line — see
+> §3. GitHub also set `master` as the fork's default branch; if that is confusing,
+> change the default to `desktop-v1` in the repo's **Settings → Branches** page.
+
 ## 3. Release-line topology (read before syncing)
 
 Upstream publishes two kinds of refs, and conflating them is the most common sync mistake:
