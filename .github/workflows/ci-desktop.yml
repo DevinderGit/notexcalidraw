@@ -1,0 +1,58 @@
+name: Desktop CI
+
+# Baseline CI for the Excalidraw Desktop fork.
+#
+# This workflow gates the `desktop-v1` integration branch. It runs the three gates that
+# every desktop task must keep green (TaskList.md §0.2):
+#   yarn test:typecheck · yarn test:code · yarn test:app --watch=false
+#
+# The upstream Vitest suite is the project's regression oracle — a red run here means
+# upstream behaviour was broken. Note the one known upstream flake documented in
+# packages/desktop/UPSTREAM.md §7.1 (MermaidToExcalidraw): if the run is red on that
+# single test, re-run before investigating.
+#
+# Prettier (`yarn test:other`) is not run here; upstream's own `lint.yml` covers it on
+# pull_request, and the repository is currently prettier-clean.
+
+on:
+  push:
+    branches: [desktop-v1]
+  pull_request:
+    branches: [desktop-v1]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: CI (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.x
+          cache: yarn
+          cache-dependency-path: yarn.lock
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Typecheck
+        run: yarn test:typecheck
+
+      - name: Lint
+        run: yarn test:code
+
+      - name: Unit tests
+        run: yarn test:app --watch=false
