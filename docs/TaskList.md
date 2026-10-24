@@ -1,7 +1,7 @@
 # TaskList.md — Excalidraw Desktop (Electron, Windows-first)
 
 | Field | Value |
-|---|---|
+| --- | --- |
 | **Companion document** | `ProjectUnderstanding.md` — comprehension layer (source architecture, target architecture, decision records, scope matrix, risk register). All §-references in this document prefixed with `PU` point to that document. |
 | **Upstream baseline** | `github.com/excalidraw/excalidraw` @ `ed10ac7dca7e40f3f4a31269b4bfba980d0db41e` (2026-10-01, `packages/excalidraw` v0.18.0) |
 | **Target deliverable** | Windows (x64) NSIS-packaged Electron desktop app wrapping the full Excalidraw editor |
@@ -17,6 +17,7 @@
 **0.1 Execution order.** Tasks carry IDs (`D-NN`) and MUST be executed in numeric order within a phase; phases MUST be executed in order (0 → 5). A task may start only when all tasks listed in its `Depends` field are complete and their acceptance criteria pass.
 
 **0.2 Definition of Done (global DoD).** A task is done only when ALL of the following hold on the working tree:
+
 1. All task-level acceptance criteria (ACs) pass.
 2. `yarn test:typecheck` exits 0.
 3. `yarn test:code` exits 0 (eslint, `--max-warnings=0`).
@@ -26,7 +27,7 @@
 **0.3 Diff-surface budget.** Upstream code under `packages/*` and `excalidraw-app/*` is a shared asset with upstream. ONLY these files may be modified, and only in the way described by the referencing task:
 
 | File | Sanctioned modification | Task |
-|---|---|---|
+| --- | --- | --- |
 | `packages/excalidraw/data/filesystem.ts` | Introduce injectable `FileSystemAdapter` seam, default behavior unchanged | D-19 |
 | `packages/excalidraw/index.tsx` | Re-export `registerFileSystemAdapter` + adapter types | D-19 |
 | `excalidraw-app/index.tsx` | Runtime-guard `registerSW()`; conditional desktop bootstrap import | D-15, D-16 |
@@ -52,6 +53,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
 ### Phase 0 — Fork baseline & hygiene
 
 #### D-01 | Repository fork, remotes, and branch model
+
 - **Depends**: — · **Est**: S
 - **Do**:
   - Create fork of `excalidraw/excalidraw`; clone; add remotes: `origin` (fork), `upstream` (canonical).
@@ -62,6 +64,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - [x] `packages/desktop/UPSTREAM.md` exists and states the pin + sync policy.
 
 #### D-02 | Baseline green-state verification
+
 - **Depends**: D-01 · **Est**: S
 - **Do**:
   - Provision the toolchain: Node 22 LTS via nvm-windows (nvm-windows v2.0.1, x64; `nvm install 22.23.4` + `nvm use 22.23.4`). Node 24 is out of scope — do not attempt to make it work.
@@ -75,6 +78,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - [x] The verification note in `packages/desktop/UPSTREAM.md` §6.1 records the build host (OS, version, architecture) and the Node and Yarn versions actually used, alongside the recorded suite results.
 
 #### D-03 | Desktop workspace README + architecture decision records
+
 - **Depends**: D-01 · **Est**: S
 - **Do**:
   - Create `packages/desktop/README.md` containing: dev commands table (fills in as Phases 1–4 land), the decision records from PU §5.2/§5.4 verbatim, and the diff-surface table from §0.3.
@@ -82,6 +86,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - [x] README exists; contains the three decision records and diff-surface table.
 
 #### D-04 | CI baseline workflow
+
 - **Depends**: D-02 · **Est**: S
 - **Do**:
   - Add `.github/workflows/ci-desktop.yml`: on `push`/`pull_request` → `desktop-v1`; matrix `ubuntu-latest`; steps: `yarn install --frozen-lockfile`, `yarn test:typecheck`, `yarn test:code`, `yarn test:app --watch=false`.
@@ -90,6 +95,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - [ ] Workflow runs green on first push to `desktop-v1`.
 
 #### D-05 | Desktop dev-docs entry
+
 - **Depends**: D-03 · **Est**: S
 - **Do**:
   - Add `packages/desktop/docs/getting-started.md`: prerequisites, `yarn desktop:dev` walkthrough (added in D-13), packaged-build walkthrough (D-33), troubleshooting (WebView2 not required — Electron bundles Chromium; SmartScreen note for unsigned builds).
@@ -99,6 +105,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
 ### Phase 1 — Desktop workspace & Electron shell
 
 #### D-06 | Scaffold `packages/desktop` workspace
+
 - **Depends**: D-02 · **Est**: M
 - **Do**:
   - Create `packages/desktop/` with `package.json` (name `@excalidraw/desktop`, `private: true`, `main: "dist/electron/main.cjs"`).
@@ -120,6 +127,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - [ ] Updated `yarn.lock` committed; a follow-up `yarn install --frozen-lockfile` succeeds; pinned Electron version recorded in README.
 
 #### D-07 | Electron TypeScript build pipeline (esbuild → CJS)
+
 - **Depends**: D-06 · **Est**: S
 - **Do**:
   - esbuild scripts bundling `src/electron/main.ts` → `dist/electron/main.cjs` and `src/electron/preload.ts` → `dist/electron/preload.cjs` (format `cjs`, `platform: node`, `external: ["electron"]`).
@@ -129,6 +137,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - [ ] `yarn workspace @excalidraw/desktop build:electron` emits both `.cjs` artifacts; artifacts load in a bare Electron smoke (`electron dist/electron/main.cjs` shows an empty window).
 
 #### D-08 | Main process skeleton: lifecycle + security posture + single instance
+
 - **Depends**: D-07 · **Est**: M
 - **Do**:
   - `windows.ts`: `createMainWindow()` — `BrowserWindow` with `width: 1440, height: 900, minWidth: 1024, minHeight: 640`, `show: false` (show on `ready-to-show`), `backgroundColor: "#ffffff"`, `webPreferences: { preload: path.join(__dirname, "preload.cjs"), contextIsolation: true, sandbox: true, nodeIntegration: false, spellcheck: true }`.
@@ -138,6 +147,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - [ ] App boots a window; second launch focuses the first; `process.argv` contract documented in code comments for D-26.
 
 #### D-09 | `app://` privileged scheme + static protocol handler
+
 - **Depends**: D-08 · **Est**: M
 - **Do**:
   - `protocol.ts`: call `protocol.registerSchemesAsPrivileged([{ scheme: "app", privileges: { standard: true, secure: true, supportFetchAPI: true, codeCache: true } }])` **at module top-level of main.ts** (must precede `app.whenReady`).
@@ -151,6 +161,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - [ ] Path traversal probe (`app://excalidraw/../../etc/passwd`) is rejected.
 
 #### D-10 | Preload bridge (contextBridge) + frozen contract types
+
 - **Depends**: D-07 · **Est**: M
 - **Do**:
   - Implement `src/shared/bridge-contract.ts` exactly per PU §5.3 — the frozen contract surface, including `onOpenFiles`, `getStartupFiles`, and `getRecentFiles` (D-26/D-28 depend on these being present from the start; the contract is frozen after this task).
@@ -160,6 +171,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - [ ] `window.excalidrawDesktop.isDesktop === true` inside the page; all contract members present; contract file compiles standalone (`tsc --noEmit`).
 
 #### D-11 | Window chrome: title, bounds persistence, native theme sync
+
 - **Depends**: D-08 · **Est**: S
 - **Do**:
   - IPC `desktop:app:documentState` → `win.setTitle(name ? `${dirty ? "• " : ""}${name} — Excalidraw` : "Excalidraw")` (renderer drives via `bridge.setDocumentState`, wired in D-25/D-27).
@@ -169,6 +181,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - [ ] Resize/move → relaunch restores bounds; title shows `•` prefix when dirty (verified end-to-end after D-25).
 
 #### D-12 | Navigation & window-open hardening
+
 - **Depends**: D-08 · **Est**: S
 - **Do**:
   - `win.webContents.setWindowOpenHandler(({ url }) => { if (allowed(url)) bridge-open-external else deny; return { action: "deny" } })` — `allowed(url)` = `https:` only.
@@ -179,6 +192,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - [ ] Clicking an element hyperlink opens the OS browser, not a new Electron window; `window.open("https://…")` from devtools is denied; `will-navigate` off-origin is blocked.
 
 #### D-13 | Dev orchestration: Vite HMR + Electron
+
 - **Depends**: D-09, D-10 · **Est**: M
 - **Do**:
   - Root scripts in `package.json`:
@@ -190,6 +204,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
 ### Phase 2 — Renderer integration & boot-time wiring
 
 #### D-14 | Desktop build mode: env + Vite config plumbing
+
 - **Depends**: D-06 · **Est**: M
 - **Do**:
   - Create root `.env.desktop`:
@@ -210,6 +225,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - [ ] Web production build (`yarn build:app`) is byte-identical in behavior to baseline (PWA still registers — spot-check `index.html`).
 
 #### D-15 | Service-worker suppression at runtime
+
 - **Depends**: D-14 · **Est**: S
 - **Do**:
   - `excalidraw-app/index.tsx` (sanctioned diff): wrap `registerSW()` → `if (!window.excalidrawDesktop?.isDesktop) { registerSW(); }`.
@@ -220,6 +236,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - [ ] Web build still registers its SW (dev check with `VITE_APP_ENABLE_PWA=true`).
 
 #### D-16 | Desktop bootstrap module + export-source override
+
 - **Depends**: D-10, D-14 · **Est**: S
 - **Do**:
   - Create `excalidraw-app/desktop/bootstrap.ts` (desktop-owned, unrestricted path). It runs when `window.excalidrawDesktop?.isDesktop`:
@@ -227,13 +244,12 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
     2. register the Electron filesystem adapter (D-23 wires this after D-20 exists);
     3. install the menu-command listener + document-state reporter (D-25);
     4. install the confirm-close handler (D-27).
-  - `excalidraw-app/index.tsx` (sanctioned diff): top-of-module guarded dynamic import:
-    `if (window.excalidrawDesktop?.isDesktop) { void import("./desktop/bootstrap"); }`
-    (dynamic import → Vite code-splits; web bundle carries only an inert async chunk).
+  - `excalidraw-app/index.tsx` (sanctioned diff): top-of-module guarded dynamic import: `if (window.excalidrawDesktop?.isDesktop) { void import("./desktop/bootstrap"); }` (dynamic import → Vite code-splits; web bundle carries only an inert async chunk).
 - **AC**:
   - [ ] In desktop dev mode, `window.EXCALIDRAW_EXPORT_SOURCE` is set before any export happens; web build shows no bootstrap code on the critical path (network tab: no `bootstrap` chunk loaded).
 
 #### D-17 | Cloud-feature & Excalidraw+ UI gating
+
 - **Depends**: D-16 · **Est**: M
 - **Do**:
   - Introduce `excalidraw-app/desktop/config.ts`: `export const IS_DESKTOP = !!window.excalidrawDesktop?.isDesktop`.
@@ -246,6 +262,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - [ ] Web build: none of the above changes (all conditionals false-positive safe).
 
 #### D-18 | Offline/asset-origin audit
+
 - **Depends**: D-09, D-14 · **Est**: S
 - **Do**:
   - Grep built `excalidraw-app/build/` for absolute `https://` runtime fetches (exclude comments/sourcemaps): verify fonts, locales, og-image meta are not runtime-fetched (meta tags are inert).
@@ -257,20 +274,27 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
 ### Phase 3 — Native file I/O (core feature work)
 
 #### D-19 | Adapter seam refactor in `data/filesystem.ts` (upstream-compatible)
+
 - **Depends**: D-02 · **Est**: M
 - **Do**:
   - Refactor `packages/excalidraw/data/filesystem.ts` (sanctioned diff) into a seam:
     ```ts
     export interface FileSystemAdapter {
-      open(opts: OpenOptions): Promise<File | File[]>;   // mirrors current fileOpen contract
-      save(blob: Blob | Promise<Blob>, opts: SaveOptions):
-        Promise<FileSystemFileHandle | null>;            // mirrors current fileSave return
+      open(opts: OpenOptions): Promise<File | File[]>; // mirrors current fileOpen contract
+      save(
+        blob: Blob | Promise<Blob>,
+        opts: SaveOptions,
+      ): Promise<FileSystemFileHandle | null>; // mirrors current fileSave return
     }
     // module state
     let adapter: FileSystemAdapter | null = null;
-    export const registerFileSystemAdapter = (a: FileSystemAdapter) => { adapter = a; };
-    export const fileOpen = async (opts) => adapter ? adapter.open(opts) : legacyFileOpen(opts);
-    export const fileSave = async (blob, opts) => adapter ? adapter.save(blob, opts) : legacyFileSave(blob, opts);
+    export const registerFileSystemAdapter = (a: FileSystemAdapter) => {
+      adapter = a;
+    };
+    export const fileOpen = async (opts) =>
+      adapter ? adapter.open(opts) : legacyFileOpen(opts);
+    export const fileSave = async (blob, opts) =>
+      adapter ? adapter.save(blob, opts) : legacyFileSave(blob, opts);
     ```
     (keep the existing `browser-fs-access` implementations as private `legacyFileOpen`/`legacyFileSave` — behavior-preserving default path).
   - Export `registerFileSystemAdapter`, `FileSystemAdapter`, and a `DesktopFileHandleLike` type from `packages/excalidraw/index.tsx` (sanctioned diff).
@@ -280,6 +304,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - [ ] `fileOpen`/`fileSave` exported signatures unchanged (typecheck across monorepo).
 
 #### D-20 | Renderer-side `ElectronFileSystemAdapter`
+
 - **Depends**: D-10, D-19 · **Est**: L
 - **Do**:
   - Create `packages/desktop/src/renderer/fs-adapter.ts` implementing `FileSystemAdapter` over `window.excalidrawDesktop.fs`:
@@ -292,6 +317,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - [ ] `File` reconstruction carries correct `name`/`type`/`lastModified` (asserted in unit tests via Buffer fixtures).
 
 #### D-21 | Main-process fs IPC: dialogs, registry, recent documents
+
 - **Depends**: D-10 · **Est**: L
 - **Do**:
   - `src/electron/ipc/fs.ts` — channels:
@@ -307,6 +333,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - [ ] `app.addRecentDocument` entries visible in Windows jump list (manual check on Windows host).
 
 #### D-22 | `DesktopFileHandle` duck-typing for `appState.fileHandle`
+
 - **Depends**: D-20 · **Est**: M
 - **Do**:
   - Define handle object: `{ kind: "file", name: string, isFile: true, isDesktopHandle: true, token: DesktopFileHandleToken, createReader?: never }` — satisfies all upstream consumers:
@@ -319,6 +346,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - [ ] Export PNG → resave-through-handle branch (`isImageFileHandle` path) does not throw.
 
 #### D-23 | Wire adapter at boot + regression-isolation check
+
 - **Depends**: D-16, D-20 · **Est**: S
 - **Do**:
   - In `excalidraw-app/desktop/bootstrap.ts`: `registerFileSystemAdapter(createElectronFileSystemAdapter())` **before** first paint (bootstrap is imported at module top of index.tsx — file-open can only happen post-mount, but register synchronously anyway).
@@ -327,6 +355,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - [ ] Full Vitest suite remains green (adapter is never registered in jsdom tests).
 
 #### D-24 | Native application menu
+
 - **Depends**: D-10 · **Est**: M
 - **Do**:
   - `src/electron/menu.ts` — `Menu.buildFromTemplate`:
@@ -340,6 +369,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - [ ] No accelerator collides with in-canvas shortcuts (Ctrl+S/Ctrl+O are upstream-bound to load/save actions — menu consumes them; in-page handlers must be the single dispatch path: document resolution).
 
 #### D-25 | Renderer menu-command dispatch → ActionManager
+
 - **Depends**: D-24, D-16 · **Est**: M
 - **Do**:
   - Create `excalidraw-app/desktop/menuCommands.tsx` — a null-rendering component mounted inside `<Excalidraw>` children from `excalidraw-app/components/AppMainMenu.tsx` (sanctioned diff — mount next to existing menu items so hooks resolve inside the provider):
@@ -356,6 +386,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - [ ] Title bar reflects `name`/dirty (D-11 end-to-end).
 
 #### D-26 | Open-with integration (associations → scene load)
+
 - **Depends**: D-21, D-25 · **Est**: M
 - **Do**:
   - Main: `collectFilesFromArgv(argv)` — Windows sends the file path as the last argument(s); handle both `app.isPackaged` (skip `argv[0]` exe + possible flag noise) and dev (`electron . <file>`); filter to supported extensions (PU §4.8).
@@ -369,6 +400,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - [ ] `.excalidrawlib` double-click imports into the library (blob routing already branches on `isValidLibrary`).
 
 #### D-27 | Close-flow guard (dirty state → native confirm)
+
 - **Depends**: D-25 · **Est**: M
 - **Do**:
   - Renderer: register `bridge.onConfirmClose(async () => …)` — main drives this when `win.on("close")` and renderer reported `dirty: true` (via D-25 reporter) or when the web `beforeunload` prevent-default fires (`win.on("will-prevent-unload")` → route to same negotiation, belt-and-braces).
@@ -380,6 +412,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - [ ] Cancel aborts; app state intact.
 
 #### D-28 | In-app recent files
+
 - **Depends**: D-21, D-24 · **Est**: M
 - **Do**:
   - Storage: `localStorage["excalidraw-desktop-recentFiles"]` (add constant `STORAGE_KEYS.LOCAL_STORAGE_DESKTOP_RECENT_FILES` — sanctioned diff in `app_constants.ts`); entries `{ path, name, ext, ts }`, max 10, LRU, dedupe by path.
@@ -390,6 +423,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - [ ] Menu Recent → click → scene loads (path still exists); stale path → graceful error toast, entry retained (user may reconnect drive) — document choice.
 
 #### D-29 | Export & library flows to disk (verification + defaultPath polish)
+
 - **Depends**: D-20, D-21, D-23 · **Est**: M
 - **Do**:
   - Verify (fix adapter if needed, no library edits): ImageExportDialog → PNG with `exportEmbedScene` on/off; SVG export; `.excalidraw.svg` re-open; clipboard export paths (no dialog, unaffected); library save (`saveLibraryAsJSON`) and library import; `defaultPath` derives from `appState.name` (upstream `DEFAULT_FILENAME` fallback) and extension auto-append.
@@ -401,6 +435,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
 ### Phase 4 — Windows packaging & distribution
 
 #### D-30 | electron-builder configuration (NSIS, x64, per-user)
+
 - **Depends**: D-09, D-14 · **Est**: M
 - **Do**:
   - `packages/desktop/electron-builder.yml`:
@@ -428,6 +463,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - [ ] Install/uninstall cycle works per-user without UAC elevation prompt.
 
 #### D-31 | Icon pipeline
+
 - **Depends**: D-30 · **Est**: S
 - **Do**:
   - Derive `build/icon.ico` (16/24/32/48/64/128/256 layers), `build/installerIcon.ico`, `build/uninstallerIcon.ico`, and header/sidebar BMPs if NSIS defaults require, from a single 1024px source PNG (upstream `public/android-chrome-512x512.png` upscaled, or redraw from `public/favicon.svg`).
@@ -436,6 +472,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - [ ] Installer/Start-Menu/taskbar/window icons all render correctly on Windows 10 and 11 (light + dark taskbar).
 
 #### D-32 | File associations for `.excalidraw` / `.excalidrawlib`
+
 - **Depends**: D-30 · **Est**: S
 - **Do**:
   - In `electron-builder.yml` `win.fileAssociations`:
@@ -447,6 +484,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - [ ] Default Programs lists "Excalidraw Document" with correct MIME.
 
 #### D-33 | Packaging build graph
+
 - **Depends**: D-30, D-31, D-32 · **Est**: M
 - **Do**:
   - Root script `desktop:dist`: sequential pipeline — `rm:build` → `yarn --cwd excalidraw-app build:desktop` → `yarn workspace @excalidraw/desktop build:electron` → copy `excalidraw-app/build` → `packages/desktop/webapp-staging/` → `yarn workspace @excalidraw/desktop dist:win` (`electron-builder --win`).
@@ -457,6 +495,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - [ ] Reproducible: re-run from clean checkout succeeds.
 
 #### D-34 | Code-signing scaffolding (unsigned default)
+
 - **Depends**: D-33 · **Est**: S
 - **Do**:
   - electron-builder `win.sign`/signtool env wiring: `CSC_LINK`, `CSC_KEY_PASSWORD` read from CI secrets; when absent → unsigned build with documented SmartScreen caveat.
@@ -465,6 +504,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - [ ] CI secret present → signed installer; absent → unsigned, build still succeeds (verified by dry-run flag).
 
 #### D-35 | Release workflow (GitHub Actions, windows-latest)
+
 - **Depends**: D-33, D-34 · **Est**: M
 - **Do**:
   - `.github/workflows/release-desktop.yml`: `workflow_dispatch` + tag `v*` push; runs-on `windows-latest`; steps: checkout → node/yarn setup → `yarn install --frozen-lockfile` → `yarn desktop:dist` → attach `release/*.exe` (+ `.blockmap` future-proofing) to GitHub Release via `softprops/action-gh-release`.
@@ -475,6 +515,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
 ### Phase 5 — QA, performance & security hardening
 
 #### D-36 | Unit tests for desktop pure logic
+
 - **Depends**: D-20, D-21, D-26 · **Est**: M
 - **Do**:
   - Vitest suites (co-located in `packages/desktop/src/**/*.test.ts`, wired via root vitest config alias additions for `@excalidraw/desktop/*`):
@@ -488,6 +529,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - [ ] `yarn test:app --watch=false` extended to include desktop suites and stays green.
 
 #### D-37 | Playwright `_electron` e2e
+
 - **Depends**: D-23, D-25 · **Est**: L
 - **Do**:
   - `packages/desktop/e2e/desktop.spec.ts` with `_electron.launch({ args: ["dist/electron/main.cjs"], env: { ELECTRON_RENDERER_URL: <vite preview url> } })`:
@@ -501,6 +543,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - [ ] e2e suite green locally and in CI; flake rate < 5% across 10 runs (`--repeat-each=10`).
 
 #### D-38 | Packaged smoke matrix (manual, scripted checklist)
+
 - **Depends**: D-33 · **Est**: M
 - **Do**:
   - Author `packages/desktop/SMOKE.md` checklist and execute on a clean Windows 10 VM **and** a Windows 11 machine: install (per-user) → launch → create → save → kill → relaunch persistence → double-click `.excalidraw` → jump-list recent → offline boot → uninstall → `%APPDATA%/Excalidraw` retention (documented `deleteAppDataOnUninstall: false` choice) → reinstall sees old data.
@@ -509,6 +552,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - [ ] All checklist rows pass or have linked issues; document committed.
 
 #### D-39 | Performance budget verification
+
 - **Depends**: D-33 · **Est**: S
 - **Do**:
   - Measure on reference hardware (document the machine spec in README): cold start → first interactive canvas (instrument via main-process timestamps + renderer `performance.now()` marks sent over bridge, test-only flag); idle heap; pan/zoom smoothness on a 1k-element generated scene (use existing `Stats` panel + `visualdebug` utilities).
@@ -517,6 +561,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - [ ] Numbers recorded in `packages/desktop/README.md`; regressions > 25% vs recorded baseline open a perf issue.
 
 #### D-40 | Security review checklist (pre-release gate)
+
 - **Depends**: D-12, D-21, D-33 · **Est**: M
 - **Do**:
   - Verify and record: `contextIsolation`/`sandbox` on all webContents (incl. any child windows — none expected); no Node globals leaked into renderer (`typeof require === "undefined"` in page); CSP response header injected via `onHeadersReceived` on `app://` responses (`default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https: wss:;`) — reconcile with Workbox absence (no SW CSP carve-outs needed); `openExternal` allowlist (https only, no `file:`/`javascript:`); permission handler deny-all except clipboard-write/fullscreen; IPC input validation on every channel (filters shape, path strings — reject UNC/device-path surprises for v1.0 scope, document as backlog hardening).
@@ -544,7 +589,7 @@ Ordered by expected value; each is a future epic with its own task list.
 ## 3. Open Questions (resolve before/during execution; defaults provided)
 
 | # | Question | Default (used by §1 tasks) |
-|---|---|---|
+| --- | --- | --- |
 | 1 | Product name in installer/title: "Excalidraw" vs a distinct fork name? | `Excalidraw` (`productName` in D-30); rename is a config-only change |
 | 2 | Keep upstream cloud services (share links, library backend, Firebase) vs self-host? | Keep upstream endpoints (PU §4.7); self-hosting is a backlog epic |
 | 3 | Default collab UI in desktop: off or on? | **Off** via D-17 flag (link-origin limitation — backlog item 2); flip with backlog item 2 |
@@ -575,7 +620,7 @@ D-36 (D-20+D-21+D-26) · D-37 (D-23+D-25)
 ```
 
 | Milestone | Tasks | Exit gate |
-|---|---|---|
+| --- | --- | --- |
 | **M1 — Fork is healthy** | D-01…D-05 | Baseline suite green in CI on `desktop-v1` |
 | **M2 — Electron shell boots** | D-06…D-13 | Editor renders in Electron window via `app://` with HMR dev loop |
 | **M3 — Desktop-ized build** | D-14…D-18 | No SW, gated cloud UI, offline-capable boot |
@@ -586,4 +631,3 @@ D-36 (D-20+D-21+D-26) · D-37 (D-23+D-25)
 **Total: 40 executable tasks (D-01…D-40) across 6 phases, plus a 9-item backlog.**
 
 ---
-

@@ -23,7 +23,7 @@ You are not yet an expert on Excalidraw's internals — that's what `ProjectUnde
 
 Two documents govern this project. Both live at the /docs:
 
-1. **`ProjectUnderstanding.md`** — the comprehension layer. Source architecture, target architecture, decision records, scope matrix, risk register, glossary, traceability matrix. This is your *textbook*.
+1. **`ProjectUnderstanding.md`** — the comprehension layer. Source architecture, target architecture, decision records, scope matrix, risk register, glossary, traceability matrix. This is your _textbook_.
 2. **`TaskList.md`** — the executable plan. 40 tasks (`D-01`…`D-40`) across 6 phases, with dependencies, acceptance criteria, and the diff-surface budget in §0.3.
 
 Read both before doing anything else. If you cannot name the seven files in the diff-surface budget (`TaskList.md` §0.3) and the four-step Definition of Done (`TaskList.md` §0.2), you have not read enough.
@@ -39,7 +39,7 @@ Before starting any task `D-NN`:
 - Confirm all tasks in its `Depends` field are complete and checked off in `TaskList.md`.
 - Re-read the task's `Do` section and `AC` (acceptance criteria) verbatim.
 - Identify every file the task touches. Cross-reference against §0.3 (the diff-surface budget). If the task wants to modify a file that is NOT in the budget, stop and flag it to the user.
-- Re-read the matching section of `ProjectUnderstanding.md` (use §13 Traceability Matrix to find it) so you understand *why* the task exists.
+- Re-read the matching section of `ProjectUnderstanding.md` (use §13 Traceability Matrix to find it) so you understand _why_ the task exists.
 
 ### Step 2 — Ask before implementing
 
@@ -60,7 +60,7 @@ While coding:
 
 - Follow the task's `Do` section exactly. If the task says "implement X per PU §5.3," you open PU §5.3 and implement the interface verbatim — no creative liberty on shapes, names, or ordering.
 - Make minimal, surgical diffs. The diff-surface budget exists for a reason: every line changed in a shared upstream file is a future rebase conflict.
-- Write code that passes `yarn test:typecheck` and `yarn test:code` (`--max-warnings=0`) *as you go*, not at the end.
+- Write code that passes `yarn test:typecheck` and `yarn test:code` (`--max-warnings=0`) _as you go_, not at the end.
 - If you discover the task is wrong (e.g. a line number reference has drifted, or an upstream API changed), stop, document the discrepancy, and ask the user before improvising.
 
 ### Step 4 — Test (mandatory, not optional)

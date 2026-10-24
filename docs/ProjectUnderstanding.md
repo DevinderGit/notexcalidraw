@@ -1,7 +1,7 @@
 # Project Understanding Document — Excalidraw Desktop (Electron, Windows-first)
 
 | Field | Value |
-|---|---|
+| --- | --- |
 | **Companion document** | `TaskList.md` — 40 executable tasks (`D-01`…`D-40`) across 6 phases |
 | **Upstream baseline** | `github.com/excalidraw/excalidraw` @ `ed10ac7dca7e40f3f4a31269b4bfba980d0db41e` (2026-10-01, `packages/excalidraw` v0.18.0) |
 | **Target deliverable** | Windows (x64) NSIS-packaged Electron desktop application embedding the full Excalidraw editor |
@@ -31,7 +31,7 @@
 
 ### 1.1 Purpose
 
-This document is the **comprehension layer** that sits on top of `TaskList.md`. The task list is deliberately terse and imperative: it tells an executing agent *what to do, where, and how to verify*. This document explains *why the work is shaped the way it is* — how the upstream Excalidraw web application actually works, which seams make a native desktop integration possible, what the target architecture looks like, and which engineering decisions were made (and rejected) before the first task was written.
+This document is the **comprehension layer** that sits on top of `TaskList.md`. The task list is deliberately terse and imperative: it tells an executing agent _what to do, where, and how to verify_. This document explains _why the work is shaped the way it is_ — how the upstream Excalidraw web application actually works, which seams make a native desktop integration possible, what the target architecture looks like, and which engineering decisions were made (and rejected) before the first task was written.
 
 A reader who finishes this document should be able to:
 
@@ -58,7 +58,7 @@ A reader who finishes this document should be able to:
 
 **How it is built.** We fork the official `excalidraw/excalidraw` monorepo at a pinned commit and add a new private workspace, `packages/desktop`, containing the Electron main process, preload bridge, IPC layer, and electron-builder configuration. The renderer is the existing `excalidraw-app` Vite build, served inside Electron from a privileged custom protocol (`app://excalidraw/`) in packaged mode and from the existing Vite dev server (HMR) in development. Only **seven upstream files** are sanctioned for modification (the "diff-surface budget"); everything else desktop-related lives in new, desktop-owned directories.
 
-**The single most important integration idea.** Every file open/save/export flow in Excalidraw funnels through one module — `packages/excalidraw/data/filesystem.ts`, which wraps the `browser-fs-access` library. By refactoring that module into an injectable adapter seam (with the browser behavior as untouched default) and registering an Electron adapter at boot, *all* of the editor's file flows — JSON scenes, PNG/SVG export, library import/export — become native in one move, without touching any call sites.
+**The single most important integration idea.** Every file open/save/export flow in Excalidraw funnels through one module — `packages/excalidraw/data/filesystem.ts`, which wraps the `browser-fs-access` library. By refactoring that module into an injectable adapter seam (with the browser behavior as untouched default) and registering an Electron adapter at boot, _all_ of the editor's file flows — JSON scenes, PNG/SVG export, library import/export — become native in one move, without touching any call sites.
 
 **Scale and shape of the work.** 40 tasks (`D-01`…`D-40`) in 6 phases — fork baseline → Electron shell → renderer integration → native file I/O → Windows packaging → QA/security hardening — gated by 6 milestones (M1–M6). Every task carries dependencies, target paths, commands, and checkbox acceptance criteria; every task must keep the full upstream Vitest suite green, because that suite is the project's regression oracle.
 
@@ -86,6 +86,7 @@ Research into prior art established that every existing Electron attempt at Exca
 URL wrapping fails the project's requirements at a structural level: it cannot intercept file dialogs (the site keeps using browser pickers), cannot register file associations meaningfully (no local file round-trip), cannot control the service-worker/update lifecycle, and is coupled to the production site's deployment — a third-party dependency for a "desktop app". The conclusion adopted by this project: **fork the monorepo, embed the application source, and swap the browser-only seams (file system access, service worker, window lifecycle) for native equivalents.** Because the whole component stack runs unmodified, upstream features keep working, and the upstream test suite remains meaningful as a regression gate.
 
 ---
+
 ## 4. Source System Analysis (As-Is)
 
 > Everything in this section was verified by direct source inspection at baseline commit `ed10ac7d`. It is the factual model of the system we are about to modify. The executing agent should treat these statements as ground truth and must not contradict them silently.
@@ -93,7 +94,7 @@ URL wrapping fails the project's requirements at a structural level: it cannot i
 ### 4.1 Repository identity & toolchain baseline
 
 | Property | Value |
-|---|---|
+| --- | --- |
 | Repository | `github.com/excalidraw/excalidraw` |
 | Pinned baseline | `ed10ac7dca7e40f3f4a31269b4bfba980d0db41e` (2026-10-01) |
 | Component library version | `@excalidraw/excalidraw` v0.18.0 |
@@ -111,7 +112,7 @@ The desktop project adds on top: `electron` (**latest stable at scaffold time, p
 Yarn Classic workspaces are declared in the root `package.json` as `["excalidraw-app", "packages/*", "examples/*"]`. Workspace roles:
 
 | Workspace | Package | Role in this project |
-|---|---|---|
+| --- | --- | --- |
 | `excalidraw-app/` | `excalidraw-app` (private) | **The web application** — entry point, scene bootstrap, persistence wiring, collab, share links, Sentry, Excalidraw+ hooks. This is what the desktop renderer embeds. |
 | `packages/excalidraw/` | `@excalidraw/excalidraw` | The editor library: `components/App.tsx` (~12k lines, the editor core), `data/` (serialization + file I/O), `actions/` (command pattern), `appState.ts`, `history.ts`, `scene/`, `fonts/`, `locales/`, `workers.ts`, `editor-jotai.ts`. |
 | `packages/element/` | `@excalidraw/element` | Element data model: creation, mutation, `Scene.ts`, store, deltas, bounds, binding, collision, z-index. |
@@ -169,7 +170,7 @@ Desktop-relevant behavioral notes:
 ### 4.5 Persistence model (all renderer-process, zero migration needed)
 
 | Store | Location | Keys / stores | Written by |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Scene elements | `localStorage` | `"excalidraw"` (`STORAGE_KEYS.LOCAL_STORAGE_ELEMENTS`) | `LocalData.save` (debounced 300 ms) |
 | UI state | `localStorage` | `"excalidraw-state"` (scrubbed via `clearAppStateForLocalStorage`) | same |
 | Theme | `localStorage` | `"excalidraw-theme"` | `useHandleAppTheme` |
@@ -205,7 +206,7 @@ UI (MainMenu DefaultItems / ImageExportDialog / LibraryMenu / paste-drop handler
 
 The pivotal piece of state is **`appState.fileHandle`** (typed `FileSystemFileHandle | null` in `packages/excalidraw/types.ts`) — the "currently bound document":
 
-- `actionSaveToActiveFile` is *enabled only when* `appState.fileHandle` is set, and re-saves through it (true Save).
+- `actionSaveToActiveFile` is _enabled only when_ `appState.fileHandle` is set, and re-saves through it (true Save).
 - `data/blob.ts` exposes `isImageFileHandle()` to branch on `.excalidraw.png` / `.svg` handles.
 - Library import (`.excalidrawlib`) flows through the same `fileOpen` / `loadSceneOrLibraryFromBlob` machinery, so adapting the seam covers library open/save with no extra work.
 
@@ -216,7 +217,7 @@ The pivotal piece of state is **`appState.fileHandle`** (typed `FileSystemFileHa
 Env files live at the repo root (`.env.development`, `.env.production`, `.env.test`), loaded via `envDir: "../"`. Production disposition for desktop:
 
 | Var | Production purpose (excalidraw.com) | Desktop v1.0 disposition |
-|---|---|---|
+| --- | --- | --- |
 | `VITE_APP_BACKEND_V2_GET_URL` / `POST_URL` | Share-link storage (`json.excalidraw.com`) | Keep (network feature; harmless offline) |
 | `VITE_APP_WS_SERVER_URL` | Collab signaling (`oss-collab.excalidraw.com`) | Keep; collab UI toggled off (D-17) |
 | `VITE_APP_FIREBASE_CONFIG` | Collab/share-link file storage | Keep (public OSS config) |
@@ -233,7 +234,7 @@ Sentry (`excalidraw-app/sentry.ts`) is DSN-gated and stays disabled for desktop 
 ### 4.8 File-format registry
 
 | Extension | MIME (`packages/common/src/constants.ts`) | Producer | Consumer |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `.excalidraw` | `application/vnd.excalidraw+json` | `saveAsJSON` | `loadFromBlob` → `restore` |
 | `.excalidrawlib` | `application/vnd.excalidrawlib+json` | `saveLibraryAsJSON` | `loadLibraryFromBlob` (`isValidLibrary`, version 1\|2) |
 | `.excalidraw.png` | `image/png` (scene embedded) | `exportCanvas("png")` + `encodePngMetadata` | `loadFromBlob` (metadata extraction) |
@@ -243,6 +244,7 @@ Sentry (`excalidraw-app/sentry.ts`) is DSN-gated and stays disabled for desktop 
 This registry is the source of truth for three desktop artifacts: native-dialog file filters (D-20), Windows file associations (D-32), and the argv file-extension whitelist for open-with handling (D-26).
 
 ---
+
 ## 5. Target System Architecture (To-Be)
 
 ### 5.1 Process model
@@ -282,7 +284,7 @@ Design principles embedded in this layout:
 
 - **Why not `file://`:** breaks fetch/XHR semantics, cookies, and origin-based APIs. Excalidraw's collab/Firebase/library code assumes a standard origin; network-dependent features degrade unpredictably under opaque origins.
 - **Why not localhost HTTP:** port collisions, firewall prompts on Windows, and an always-on HTTP server inside a desktop app is attack surface plus operational noise.
-- **Why `app://` works:** registered via `protocol.registerSchemesAsPrivileged([{ scheme: "app", privileges: { standard: true, secure: true, supportFetchAPI: true, codeCache: true } }])` **at main.ts module top-level — it must precede `app.whenReady()`**. Served via `protocol.handle("app", …)` streaming files from the packaged webapp directory with a full MIME map and an `index.html` fallback. Because the scheme is *standard*, the renderer gets a real origin (`app://excalidraw`), so `window.location` hash state, localStorage, IndexedDB, and fetch all behave exactly as on the web.
+- **Why `app://` works:** registered via `protocol.registerSchemesAsPrivileged([{ scheme: "app", privileges: { standard: true, secure: true, supportFetchAPI: true, codeCache: true } }])` **at main.ts module top-level — it must precede `app.whenReady()`**. Served via `protocol.handle("app", …)` streaming files from the packaged webapp directory with a full MIME map and an `index.html` fallback. Because the scheme is _standard_, the renderer gets a real origin (`app://excalidraw`), so `window.location` hash state, localStorage, IndexedDB, and fetch all behave exactly as on the web.
 - **Hardening:** path traversal probes (`app://excalidraw/../../etc/passwd`) are rejected via `path.normalize` + prefix checks (D-09 acceptance test), and a CSP response header is injected via `onHeadersReceived` on `app://` responses (D-40).
 - **Dev mode:** `loadURL("http://localhost:3001")` — the existing Vite dev server — preserving HMR; the protocol handler engages only when `app.isPackaged` or `ELECTRON_RENDERER_URL` is unset.
 
@@ -298,21 +300,31 @@ export interface DesktopBridge {
   readonly appVersion: string;
   /** file system */
   fs: {
-    open(opts: { filters: FileFilter[]; multiSelections?: boolean }):
-      Promise<OpenResult[] | null>;            // null = user cancelled
-    save(opts: { contents: Uint8Array; filters: FileFilter[]; defaultPath?: string;
-                 /** existing handle → overwrite silently (true Save) */
-                 token?: string }): Promise<SaveResult | null>;
-    readPath(path: string): Promise<{ data: Uint8Array; name: string; lastModifiedMs: number }>;
+    open(opts: {
+      filters: FileFilter[];
+      multiSelections?: boolean;
+    }): Promise<OpenResult[] | null>; // null = user cancelled
+    save(opts: {
+      contents: Uint8Array;
+      filters: FileFilter[];
+      defaultPath?: string;
+      /** existing handle → overwrite silently (true Save) */
+      token?: string;
+    }): Promise<SaveResult | null>;
+    readPath(
+      path: string,
+    ): Promise<{ data: Uint8Array; name: string; lastModifiedMs: number }>;
   };
   /** native menu → renderer command dispatch */
   onMenuCommand(handler: (command: MenuCommandId) => void): () => void;
   /** shell */
-  openExternal(url: string): void;             // main allowlists https: only
+  openExternal(url: string): void; // main allowlists https: only
   /** window state */
   setDocumentState(state: { name: string | null; dirty: boolean }): void;
   /** close-flow negotiation (D-27) */
-  onConfirmClose(handler: () => Promise<"save" | "discard" | "cancel">): () => void;
+  onConfirmClose(
+    handler: () => Promise<"save" | "discard" | "cancel">,
+  ): () => void;
   /** open-with delivery, running instance: main → renderer push (second-instance argv) */
   onOpenFiles(handler: (paths: string[]) => void): () => void;
   /** open-with delivery, cold start: renderer pulls once during bootstrap (D-26) */
@@ -320,8 +332,13 @@ export interface DesktopBridge {
   /** main pulls in-app recents when rebuilding the native Recent submenu (D-24/D-28) */
   getRecentFiles(): Promise<DesktopRecentFile[]>;
 }
-export type DesktopFileHandleToken = string;   // opaque, main-process registry key
-export interface DesktopRecentFile { path: string; name: string; ext: string; ts: number }
+export type DesktopFileHandleToken = string; // opaque, main-process registry key
+export interface DesktopRecentFile {
+  path: string;
+  name: string;
+  ext: string;
+  ts: number;
+}
 ```
 
 `MenuCommandId = "file:new" | "file:open" | "file:save" | "file:saveAs" | "file:exportImage" | "help:about"`.
@@ -329,9 +346,9 @@ export interface DesktopRecentFile { path: string; name: string; ext: string; ts
 Contract properties worth internalizing:
 
 - **Frozen from D-10 onward.** The interface includes the open-with/recents members (`onOpenFiles`, `getStartupFiles`, `getRecentFiles`) up front, because D-26/D-28 need them. Transport mapping: `onOpenFiles` ↔ `desktop:open-files` push, `getStartupFiles` ↔ `desktop:app:startupFiles` invoke, `getRecentFiles` ↔ `desktop:menu:recent` invoke.
-- **Frozen on purpose.** The interface is small and stable so renderer-side code can rely on it without version gymnastics. New capabilities (e.g. auto-update later) are *added*, never reshaped.
+- **Frozen on purpose.** The interface is small and stable so renderer-side code can rely on it without version gymnastics. New capabilities (e.g. auto-update later) are _added_, never reshaped.
 - **Cancel is a value, not an exception.** `open`/`save` returning `null` means user cancellation; the adapter layer translates this into the benign abort-error shape upstream already treats as cancel.
-- **Opaque tokens, not paths.** The renderer never learns absolute file paths as authority; it receives opaque tokens whose path mapping lives in a main-process `HandleRegistry` (`crypto.randomBytes(16)` hex tokens, in-memory, session-scoped). The renderer does receive paths as *data* for recents/labels, but privileged writes always resolve through main.
+- **Opaque tokens, not paths.** The renderer never learns absolute file paths as authority; it receives opaque tokens whose path mapping lives in a main-process `HandleRegistry` (`crypto.randomBytes(16)` hex tokens, in-memory, session-scoped). The renderer does receive paths as _data_ for recents/labels, but privileged writes always resolve through main.
 - **Push channels are evented.** Menu commands, open-with file deliveries, and close negotiation are main→renderer pushes with unsubscribe functions, designed for React `useEffect` lifecycles.
 
 ### 5.4 The `FileSystemAdapter` injection seam (decision record)
@@ -340,14 +357,20 @@ Upstream `data/filesystem.ts` wraps `browser-fs-access`. Task D-19 refactors it 
 
 ```ts
 export interface FileSystemAdapter {
-  open(opts: OpenOptions): Promise<File | File[]>;   // mirrors current fileOpen contract
-  save(blob: Blob | Promise<Blob>, opts: SaveOptions):
-    Promise<FileSystemFileHandle | null>;            // mirrors current fileSave return
+  open(opts: OpenOptions): Promise<File | File[]>; // mirrors current fileOpen contract
+  save(
+    blob: Blob | Promise<Blob>,
+    opts: SaveOptions,
+  ): Promise<FileSystemFileHandle | null>; // mirrors current fileSave return
 }
 let adapter: FileSystemAdapter | null = null;
-export const registerFileSystemAdapter = (a: FileSystemAdapter) => { adapter = a; };
-export const fileOpen = async (opts) => adapter ? adapter.open(opts) : legacyFileOpen(opts);
-export const fileSave = async (blob, opts) => adapter ? adapter.save(blob, opts) : legacyFileSave(blob, opts);
+export const registerFileSystemAdapter = (a: FileSystemAdapter) => {
+  adapter = a;
+};
+export const fileOpen = async (opts) =>
+  adapter ? adapter.open(opts) : legacyFileOpen(opts);
+export const fileSave = async (blob, opts) =>
+  adapter ? adapter.save(blob, opts) : legacyFileSave(blob, opts);
 ```
 
 Key properties:
@@ -358,7 +381,7 @@ Key properties:
 
 ### 5.5 `DesktopFileHandle` — duck-typing for `appState.fileHandle`
 
-The adapter returns a handle-shaped object — `{ kind: "file", name, isFile: true, isDesktopHandle: true, token }` — that satisfies every upstream consumer of `appState.fileHandle` *structurally*, without editing `types.ts`:
+The adapter returns a handle-shaped object — `{ kind: "file", name, isFile: true, isDesktopHandle: true, token }` — that satisfies every upstream consumer of `appState.fileHandle` _structurally_, without editing `types.ts`:
 
 - The truthiness gate in `actionSaveToActiveFile` (L261 `!!appState.fileHandle`) passes, enabling Ctrl+S.
 - Re-save flows (`saveAsJSON(…, fileHandle)`) hand the handle back to `fileSave`; the adapter intercepts, sees `token`, and the main process writes through the registered path — **silent overwrite, no dialog** (true desktop Save semantics).
@@ -402,7 +425,7 @@ Fork `excalidraw/excalidraw`; pin the baseline commit; create the long-lived int
 ### 6.2 Alternatives rejected
 
 | Alternative | Why rejected |
-|---|---|
+| --- | --- |
 | URL wrapper (official deprecated `excalidraw-desktop`, community forks) | Cannot intercept file dialogs, cannot bind file types with local round-trip, no control over SW/updates, coupled to site deployment — structurally fails the v1.0 feature scope. |
 | npm-package embedding (`@excalidraw/excalidraw` + custom app) | Would discard the application tier (`excalidraw-app`): scene bootstrap, persistence wiring, menus, share links, library UI would all need re-implementation — a fork of the app layer by other means, with more drift risk. |
 | Tauri (Rust shell, system WebView) | Smaller binaries, but WebView2 ≠ Chrome-exact rendering; the File System Access surface differs; Rust boundary complicates the adapter seam; violates the rendering-parity constraint. |
@@ -413,7 +436,7 @@ Fork `excalidraw/excalidraw`; pin the baseline commit; create the long-lived int
 Upstream code under `packages/*` and `excalidraw-app/*` is a **shared asset with upstream**. Exactly seven files may be modified, each only in the way its referencing task prescribes:
 
 | File | Sanctioned modification | Task |
-|---|---|---|
+| --- | --- | --- |
 | `packages/excalidraw/data/filesystem.ts` | Introduce injectable `FileSystemAdapter` seam, default behavior unchanged | D-19 |
 | `packages/excalidraw/index.tsx` | Re-export `registerFileSystemAdapter` + adapter types | D-19 |
 | `excalidraw-app/index.tsx` | Runtime-guard `registerSW()`; conditional desktop bootstrap import | D-15, D-16 |
@@ -426,17 +449,18 @@ Anything else requires a new desktop-owned module (`excalidraw-app/desktop/**`, 
 
 ### 6.4 Upstream sync policy
 
-Keep the `upstream` remote; rebase `desktop-v1` monthly or on security-relevant releases; pin the fork to upstream **release tags**, never `@master`. The pinned commit and procedure are recorded in `packages/desktop/UPSTREAM.md` (created in D-01). Because the seam was designed as an *injection point with an unchanged default path*, the most likely upstream refactors (call-site changes in `data/json.ts`, `actionExport.tsx`) do not touch the seam itself — the expected rebase friction is concentrated in the seven sanctioned files.
+Keep the `upstream` remote; rebase `desktop-v1` monthly or on security-relevant releases; pin the fork to upstream **release tags**, never `@master`. The pinned commit and procedure are recorded in `packages/desktop/UPSTREAM.md` (created in D-01). Because the seam was designed as an _injection point with an unchanged default path_, the most likely upstream refactors (call-site changes in `data/json.ts`, `actionExport.tsx`) do not touch the seam itself — the expected rebase friction is concentrated in the seven sanctioned files.
 
 ---
+
 ## 7. Delivery Plan — Mapping to TaskList.md
 
-### 7.1 Phase intent (what each phase *means*)
+### 7.1 Phase intent (what each phase _means_)
 
-`TaskList.md` §1 defines 40 tasks; the table below captures the *intent* of each phase — the question it answers — so the executor understands milestones as capability gates, not just task groups.
+`TaskList.md` §1 defines 40 tasks; the table below captures the _intent_ of each phase — the question it answers — so the executor understands milestones as capability gates, not just task groups.
 
 | Phase | Tasks | Question answered | Exit capability |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **0 — Fork baseline & hygiene** | D-01…D-05 | "Is our fork healthy and provably green before we touch anything?" | Pinned fork, remotes, recorded baseline test results, CI on `desktop-v1`, dev docs skeleton |
 | **1 — Desktop workspace & Electron shell** | D-06…D-13 | "Can Electron boot the editor at all?" | `packages/desktop` workspace, esbuild→CJS pipeline, secure `BrowserWindow`, single-instance, `app://` protocol, preload bridge, window chrome, nav hardening, HMR dev loop (`yarn desktop:dev`) |
 | **2 — Renderer integration & boot-time wiring** | D-14…D-18 | "Does the app behave desktop-native (no PWA, gated cloud UI) and stay web-build-compatible?" | `.env.desktop` + mode-aware Vite config, SW suppression (build+runtime), desktop bootstrap module, Plus/collab UI gating, offline-asset audit |
@@ -447,7 +471,7 @@ Keep the `upstream` remote; rebase `desktop-v1` monthly or on security-relevant 
 ### 7.2 Milestone gates (M1–M6)
 
 | Milestone | Tasks | Exit gate |
-|---|---|---|
+| --- | --- | --- |
 | **M1 — Fork is healthy** | D-01…D-05 | Baseline suite green in CI on `desktop-v1` |
 | **M2 — Electron shell boots** | D-06…D-13 | Editor renders in Electron window via `app://` with HMR dev loop |
 | **M3 — Desktop-ized build** | D-14…D-18 | No SW, gated cloud UI, offline-capable boot |
@@ -469,14 +493,14 @@ The dependency graph in `TaskList.md` §4 shows two long poles:
 - **The shell pole:** D-06 → D-07 → D-08 → D-09/D-10 → (D-16, D-20) → D-23/D-25 → D-26/D-27 — i.e. workspace → build pipeline → window → protocol/bridge → bootstrap/adapter → native file UX. Phase 3 (M4) is the largest capability block and contains two of the plan's three **L-estimated** tasks (D-20, D-21; the third, D-37, lands in Phase 5).
 - **The packaging pole:** D-30 (needs D-09+D-14) → D-31/D-32 → D-33 → D-34/D-35 — mostly deterministic config work once the shell exists.
 
-QA tasks fan in: D-36 (D-20+D-21+D-26), D-37 (D-23+D-25), D-38/D-39 (D-33), D-40 (D-12+D-21+D-33). Nothing in Phase 5 blocks M5's installer; it blocks *release*.
+QA tasks fan in: D-36 (D-20+D-21+D-26), D-37 (D-23+D-25), D-38/D-39 (D-33), D-40 (D-12+D-21+D-33). Nothing in Phase 5 blocks M5's installer; it blocks _release_.
 
 ---
 
 ## 8. Architectural Decision Digest
 
 | # | Decision | Chosen | Primary rationale | Rejected alternative(s) |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | 1 | Shell framework | **Current-stable Electron at kickoff (pinned exact at D-06; floor ≥ 38)** | Chromium parity with excalidraw.com → rendering/behavior identical; upstream suite remains meaningful | Tauri (WebView2 divergence), URL wrapper (structural ceiling), stale Electron pins (Chromium drift) |
 | 2 | Integration strategy | **Fork monorepo + `packages/desktop` workspace** | Source-level aliases enable deep imports; app tier reused; suite continuity; feasible upstream syncs | npm-package embedding (re-implements app tier); URL wrapping |
 | 3 | Serving model | **`app://` privileged custom protocol** | Real origin for localStorage/IndexedDB/fetch/hash routing; no ports/firewalls; no `file://` origin breakage | `file://` (opaque origin), localhost HTTP (ports, firewall, surface area) |
@@ -493,7 +517,7 @@ QA tasks fan in: D-36 (D-20+D-21+D-26), D-37 (D-23+D-25), D-38/D-39 (D-33), D-40
 ## 9. Scope Matrix
 
 | Capability | Disposition |
-|---|---|
+| --- | --- |
 | Editor core (canvas, tools, text, frames, laser, stats, command palette) | **Inherited unmodified**; regression-guarded by upstream Vitest suite |
 | localStorage / IndexedDB persistence | **Inherited unmodified** (lands in Electron userData dir) |
 | Native open/save dialogs, `.excalidraw`/`.excalidrawlib` associations, recent files | **Built in this plan** (Phases 3–4) |
@@ -510,7 +534,7 @@ QA tasks fan in: D-36 (D-20+D-21+D-26), D-37 (D-23+D-25), D-38/D-39 (D-33), D-40
 ## 10. Risk Register
 
 | # | Risk | Likelihood | Impact | Mitigation (embedded in plan) |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | R1 | Upstream drift breaks the fork during sync | Medium | High | Diff-surface budget (7 files); pin to release tags; monthly rebase with §0.3 table as conflict checklist; seam designed as injection point so default path survives refactors |
 | R2 | `DesktopFileHandle` duck-typing breaks an upstream consumer | Low | High | D-22 enumerates every consumer (truthiness gate, `isImageFileHandle`, re-save); conformance tests in D-36; structural typing preferred over touching `types.ts` |
 | R3 | Menu accelerators collide with in-canvas shortcut bindings (Ctrl+S/O double-handling) | Medium | Medium | D-24 AC explicitly requires single-dispatch resolution and collision verification |
@@ -531,7 +555,7 @@ QA tasks fan in: D-36 (D-20+D-21+D-26), D-37 (D-23+D-25), D-38/D-39 (D-33), D-40
 `TaskList.md` §3 records five open questions, each with a **default the tasks already assume** — execution proceeds on defaults unless a stakeholder overrides:
 
 | # | Question | Default assumed by tasks |
-|---|---|---|
+| --- | --- | --- |
 | 1 | Product name: "Excalidraw" vs a distinct fork name? | `Excalidraw` (config-only change later if renamed) |
 | 2 | Upstream cloud services vs self-hosting? | Keep upstream endpoints; self-hosting is a backlog epic |
 | 3 | Collab UI default in desktop? | **Off** (D-17 flag); flips with collab hardening epic |
@@ -543,7 +567,7 @@ QA tasks fan in: D-36 (D-20+D-21+D-26), D-37 (D-23+D-25), D-38/D-39 (D-33), D-40
 ## 12. Glossary
 
 | Term | Meaning in this project |
-|---|---|
+| --- | --- |
 | **`appState.fileHandle`** | Upstream state field (typed `FileSystemFileHandle \| null`) representing the currently bound document; drives the Save vs Save-As distinction. The desktop adapter satisfies it with a duck-typed handle. |
 | **browser-fs-access** | Upstream dependency abstracting the File System Access API (FSA) with legacy `<input>`/`<a download>` fallbacks; wrapped by `data/filesystem.ts`. |
 | **FSA (File System Access API)** | Chromium API (`showOpenFilePicker`/`showSaveFilePicker`) unavailable in Electron — the root cause of the adapter-seam design. |
@@ -574,7 +598,7 @@ QA tasks fan in: D-36 (D-20+D-21+D-26), D-37 (D-23+D-25), D-38/D-39 (D-33), D-40
 Mapping from this document's comprehension sections to the tasks in `TaskList.md` §1 — use it to jump from "understanding" to "verification":
 
 | Understanding section | Facts / decisions it explains | Verified or implemented by tasks |
-|---|---|---|
+| --- | --- | --- |
 | §4.2 Monorepo topology, source aliases | Workspace roles; deep-import legality | D-01, D-06 |
 | §4.3 Build & toolchain | Vite/plugins/fonts/gates | D-02, D-04, D-14 |
 | §4.4 Bootstrap & scene resolution | Hash routing, export-source override, save pausing | D-16, D-25, D-26 |

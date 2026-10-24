@@ -92,11 +92,7 @@ All commands are run from the **monorepo root** unless stated otherwise. Command
 
 ## 5. Architecture decision records
 
-Reproduced from PU §5.2, §5.4 and §5.5 — the three decisions that shape the whole
-integration; everything else follows from them. The prose is verbatim; the embedded code
-blocks are re-wrapped by the repository's Prettier configuration, so they are
-semantically identical to PU's but not byte-identical. **PU is the source of truth** —
-if the two ever disagree, PU wins.
+Reproduced from PU §5.2, §5.4 and §5.5 — the three decisions that shape the whole integration; everything else follows from them. The prose is verbatim; the embedded code blocks are re-wrapped by the repository's Prettier configuration, so they are semantically identical to PU's but not byte-identical. **PU is the source of truth** — if the two ever disagree, PU wins.
 
 ### 5.1 Serving model — the `app://` privileged protocol (decision record)
 
