@@ -128,7 +128,7 @@ New files are unrestricted: `packages/desktop/**` and `excalidraw-app/desktop/**
 | --- | --- | --- |
 | Node | _see §6.1_ | Desktop toolchain requires ≥ 20 LTS (22 recommended); upstream declares ≥ 18 |
 | Yarn | _see §6.1_ | Yarn Classic 1.22.22, via the root `packageManager` field |
-| Electron | _see §6.1_ | Latest stable at scaffold time, pinned exact in `packages/desktop/package.json` (floor `^38`) — D-06 |
+| Electron | _see §6.1_ | Pinned exactly in `packages/desktop/package.json` (floor `^38`) — D-06 |
 | Windows build host | Windows 10/11 x64 | Required for the packaging tasks (D-30…D-35) |
 
 ### 6.1 Recorded toolchain versions & baseline verification note
@@ -153,7 +153,7 @@ New files are unrestricted: `packages/desktop/**` and `excalidraw-app/desktop/**
 | Node | **v22.23.4** (LTS "Jod") | Provisioned via nvm-windows v2.0.1 (shim mode). Node 24 is explicitly out of scope for this project. |
 | npm | 10.9.9 | Bundled with Node 22.23.4 |
 | Yarn | **1.22.22** (Yarn Classic) | Matches the root `packageManager` field. Resolved through the nvm shim. |
-| Electron | _(pending — D-06)_ | Latest stable at scaffold time, pinned exact in `packages/desktop/package.json` (floor `^38`) |
+| Electron | **45.0.0** | Pinned exactly in `packages/desktop/package.json` (floor `^38`). Bundles Chromium 156.0.8078.48. That Node 24.19.0 is the runtime _inside_ Electron — the build toolchain is Node 22.23.4. |
 
 **Getting Node 22 on this host**
 
@@ -191,6 +191,7 @@ Two upstream (non-failing) messages are expected on this host and are not regres
 - **Docker**: CLI 29.8.0 is installed but the Docker Desktop daemon is **not running** by default. Start it before relying on a local container as an ubuntu control run; the D-02 escape hatch is better served by the D-04 CI job.
 - **GitHub CLI**: `gh` is **not installed** on this host. Remotes are managed with plain `git` (`git remote add` / `git push`), and the `origin` fork is `https://github.com/DevinderGit/notexcalidraw.git`.
 - The account running the build is a **standard (non-elevated) user** on this machine. Anything requiring administrator rights (e.g. editing the machine PATH) needs an explicit UAC-approved step and cannot be done from an unattended shell.
+- **Electron 45 removed its `postinstall` hook**, so the 151 MB platform binary is no longer fetched by `yarn install` on its own — the `electron` package ships an `install-electron` bin instead. `packages/desktop/package.json` re-adds the hook as a `postinstall` script. Full explanation in `packages/desktop/README.md` §2.2. On this host the binary comes from `ELECTRON_MIRROR=https://cdn.npmmirror.com/binaries/electron/` (GitHub's release CDN is throttled to ~20 KB/s here); the result was verified byte-identical to GitHub's official release against both `checksums.json` (npm) and `SHASUMS256.txt` (GitHub).
 
 ### 7.1 Known flaky upstream test — `MermaidToExcalidraw`
 

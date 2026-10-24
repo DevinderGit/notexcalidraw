@@ -123,8 +123,8 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - Verify root workspaces glob `packages/*` already covers it (no root edit needed); `yarn install` links cleanly.
   - **Lockfile sequencing:** because this task adds dependencies, the first install MUST be plain `yarn install` (not `--frozen-lockfile`) so `yarn.lock` is updated, and the updated lockfile is committed in this task's commit — D-04's CI runs `--frozen-lockfile` and would fail otherwise.
 - **AC**:
-  - [ ] `yarn workspace @excalidraw/desktop --version` resolves; install is clean; layout above exists.
-  - [ ] Updated `yarn.lock` committed; a follow-up `yarn install --frozen-lockfile` succeeds; pinned Electron version recorded in README.
+  - [x] `yarn workspace @excalidraw/desktop --version` resolves; install is clean; layout above exists.
+  - [x] Updated `yarn.lock` committed; a follow-up `yarn install --frozen-lockfile` succeeds; pinned Electron version recorded in README.
 
 #### D-07 | Electron TypeScript build pipeline (esbuild → CJS)
 

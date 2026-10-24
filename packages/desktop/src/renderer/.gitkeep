@@ -1,0 +1,3 @@
+# Renderer-side desktop modules (D-20):
+#   fs-adapter.ts  the ElectronFileSystemAdapter implementing FileSystemAdapter
+#   global.d.ts    Window.excalidrawDesktop declaration merging (D-10)

@@ -22,9 +22,10 @@ This workspace holds everything we build: the Electron main process, the preload
 | D-03 This README | ✅ done | — |
 | D-04 CI baseline workflow | ✅ done | `.github/workflows/ci-desktop.yml` — green on first push to `desktop-v1` |
 | D-05 Desktop dev-docs entry | ✅ done | [`docs/getting-started.md`](./docs/getting-started.md) |
-| D-06 Scaffold `packages/desktop` workspace | ⏳ next | Phase 1 — the Electron workspace itself |
+| D-06 Scaffold `packages/desktop` workspace | ✅ done | Workspace, pinned deps (Electron 45.0.0), `yarn.lock` updated |
+| D-07 Electron build pipeline (esbuild → CJS) | ⏳ next | Phase 1 — the first Electron window |
 
-Nothing in `packages/desktop/src/` exists yet — the Electron workspace is scaffolded in **D-06**. Until then this directory holds only documentation.
+The workspace is scaffolded (D-06), but it holds no application code yet — `src/` is an empty skeleton. The Electron sources land from **D-07** onward: `main.ts` + `preload.ts` (D-07), `windows.ts` (D-08), `protocol.ts` (D-09), `bridge-contract.ts` (D-10).
 
 ## 2. Prerequisites
 
@@ -41,6 +42,42 @@ Nothing in `packages/desktop/src/` exists yet — the Electron workspace is scaf
 > ```
 >
 > Full details in [`UPSTREAM.md` §6.1](./UPSTREAM.md#61-recorded-toolchain-versions--baseline-verification-note).
+
+### 2.1 Pinned workspace dependencies
+
+`packages/desktop/package.json` pins every devDependency **exactly** — no `^` or `~`. The Electron version in particular must never drift silently: rendering parity with excalidraw.com depends on tracking current Chromium (PU §5.2, §6.1).
+
+| Package | Version | Why |
+| --- | --- | --- |
+| `electron` | `45.0.0` | The shell. Project floor is `^38`; we track current stable. Requires Node ≥ 22.12.0. |
+| `electron-builder` | `26.18.0` | NSIS per-user packaging (D-30…D-35) |
+| `esbuild` | `0.25.12` | Bundles main + preload to CommonJS (D-07) |
+| `concurrently` | `10.0.6` | Runs Vite + Electron side by side (D-13) |
+| `cross-env` | `10.1.0` | Cross-platform env vars in the npm scripts (D-13, D-14) |
+| `wait-on` | `9.5.1` | Waits for the Vite dev server before launching Electron (D-13) |
+| `@playwright/test` | `1.64.1` | `_electron` end-to-end suite (D-37) |
+| `png2icons` | `2.0.1` | Icon pipeline (D-31) |
+
+Re-pinning Electron is a deliberate act, not a routine bump — it changes the bundled Chromium and therefore the parity assumption the whole project rests on.
+
+### 2.2 Electron 45 no longer installs its binary automatically
+
+Up to Electron 44 the `electron` package downloaded its platform binary in a `postinstall` hook. **Electron 45 removed that hook** — the package publishes no install script at all, and the binary is fetched by an explicit `install-electron` command.
+
+Without a countermeasure, `yarn install` leaves `node_modules/electron` without a `dist/`, and `require("electron")` throws _"Electron failed to install correctly"_. The workspace therefore re-adds the hook itself:
+
+```json
+"scripts": {
+  "install:electron": "install-electron",
+  "postinstall": "install-electron || echo '[desktop] electron binary unavailable - run: yarn workspace @excalidraw/desktop install:electron'"
+}
+```
+
+The `||` fallback keeps `yarn install` from failing outright when the machine is offline — the desktop workspace is not needed to run the upstream test suites. The install is idempotent: Electron's installer exits immediately if the binary is already present and matching.
+
+**Integrity.** The downloaded zip is verified by Electron's own installer against `checksums.json`, which is published **inside the npm package** — not fetched from the download host. A mirror therefore cannot serve a tampered binary without failing the install.
+
+> **Mirror note (this host).** GitHub's release-asset CDN is throttled to ~20 KB/s from this network, which makes the 151 MB Electron binary take ~2 hours. Set `ELECTRON_MIRROR=https://cdn.npmmirror.com/binaries/electron/` to download it at ~640 KB/s instead. The binary served that way was verified byte-identical to GitHub's official release (`sha256 ae53887a23bb640369c93dbd38c408a2af5c0deb86f2fa76c6c244cb444b7f47`).
 
 ## 3. Repository layout
 

@@ -1,0 +1,22 @@
+{
+  "name": "@excalidraw/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Electron shell for the Excalidraw desktop app",
+  "license": "MIT",
+  "main": "dist/electron/main.cjs",
+  "scripts": {
+    "install:electron": "install-electron",
+    "postinstall": "install-electron || echo '[desktop] electron binary unavailable - run: yarn workspace @excalidraw/desktop install:electron'"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "concurrently": "10.0.6",
+    "cross-env": "10.1.0",
+    "electron": "45.0.0",
+    "electron-builder": "26.18.0",
+    "esbuild": "0.25.12",
+    "png2icons": "2.0.1",
+    "wait-on": "9.5.1"
+  }
+}

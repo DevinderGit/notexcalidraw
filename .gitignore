@@ -27,3 +27,12 @@ dev-dist
 html
 meta*.json
 .claude
+
+# Excalidraw Desktop workspace (packages/desktop)
+# `build` and `dist` are already ignored by the patterns above; the desktop workspace
+# needs `build/` tracked (it holds the committed icon assets, D-31) and `dist/`
+# ignored (esbuild output). `release/` and `webapp-staging/` are packaging output.
+!packages/desktop/build/
+!packages/desktop/build/**
+packages/desktop/release/
+packages/desktop/webapp-staging/

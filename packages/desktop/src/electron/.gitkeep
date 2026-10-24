@@ -1,0 +1,7 @@
+# Electron main process. Sources land here from D-07 onward:
+#   main.ts      (D-07/D-08)  app lifecycle, single-instance lock
+#   preload.ts   (D-07)       contextBridge preload
+#   windows.ts   (D-08)       BrowserWindow creation + security posture
+#   protocol.ts  (D-09)       app:// privileged scheme handler
+#   menu.ts      (D-24)       native application menu
+#   ipc/         (D-21)       desktop:fs:* and desktop:menu:* handlers

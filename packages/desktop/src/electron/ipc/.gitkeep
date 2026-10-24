@@ -1,0 +1,3 @@
+# Main-process IPC handlers (D-21):
+#   fs.ts      desktop:fs:open | desktop:fs:save | desktop:fs:readPath
+#   handles.ts the in-memory HandleRegistry (opaque token -> absolute path)

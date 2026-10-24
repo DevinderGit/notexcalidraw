@@ -1,0 +1,2 @@
+# Shared between the main and renderer processes (D-10):
+#   bridge-contract.ts  the frozen DesktopBridge interface (PU 5.3)
