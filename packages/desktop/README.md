@@ -29,7 +29,7 @@ This workspace holds everything we build: the Electron main process, the preload
 | D-10 Preload bridge + frozen contract | ✅ done | `window.excalidrawDesktop` live in the page |
 | D-11 Window chrome (title, bounds, theme) | ✅ done | Title reflects the document; geometry persists |
 | D-12 Navigation & window-open hardening | ✅ done | External links go to the OS; no new windows |
-| D-13 Dev orchestration (Vite HMR + Electron) | ⏳ next | Phase 1 — one-command dev loop |
+| D-13 Dev orchestration (Vite HMR + Electron) | ✅ done | `yarn desktop:dev` — editor with hot reload |
 
 The shell is functional: it boots a window, serves the editor over `app://excalidraw`, and exposes the bridge to the page. What is still missing is the desktop _behaviour_ — the native menu, native file dialogs and file associations all land in Phase 3.
 
@@ -130,6 +130,7 @@ All commands are run from the **monorepo root** unless stated otherwise. Command
 | `yarn test:all` | All four of the above, plus `test:other` (Prettier). |
 | `yarn workspace @excalidraw/desktop build:electron` | Bundle the Electron main + preload to `packages/desktop/dist/electron/*.cjs`. |
 | `yarn workspace @excalidraw/desktop watch:electron` | Same, rebuilding on every source change. |
+| `yarn desktop:dev` | **The dev loop.** Vite (desktop mode, port 3001) + esbuild watch + Electron, all in one command. |
 
 ### Lands as the phases progress
 
@@ -137,7 +138,6 @@ All commands are run from the **monorepo root** unless stated otherwise. Command
 | --- | --- | --- |
 | `yarn --cwd excalidraw-app dev:vite` | D-14 | Vite dev server in `desktop` mode on port 3001 (HMR). |
 | `yarn --cwd excalidraw-app build:desktop` | D-14 | Production webapp build with PWA suppressed → `excalidraw-app/build/`. |
-| `yarn desktop:dev` | D-13 | Vite (HMR) + Electron together, Electron launched once the dev server answers. |
 | `yarn desktop:build` | D-14 | `build:desktop` + `build:electron`. |
 | `yarn desktop:dist` | D-33 | Full packaging graph → `packages/desktop/release/*.exe` (NSIS installer). |
 | `yarn workspace @excalidraw/desktop dist:win` | D-33 | `electron-builder --win` on its own. |

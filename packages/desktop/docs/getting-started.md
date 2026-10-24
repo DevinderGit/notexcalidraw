@@ -2,7 +2,7 @@
 
 Everything you need to get the desktop shell running on a fresh Windows machine, plus what to do when something goes wrong.
 
-> **Status.** This project is in **Phase 1** of the plan. The Electron shell boots and serves the editor over the `app://` protocol, but the HMR dev loop lands in **D-13** and the desktop-specific behaviour (native file dialogs, menus) in Phase 3. Commands marked ⏳ _not available yet_ will appear as the plan lands. See [`packages/desktop/README.md`](../README.md) for the task-by-task status and [`UPSTREAM.md`](../UPSTREAM.md) for the pinned upstream commit.
+> **Status.** This project is in **Phase 1** of the plan. The Electron shell boots, serves the editor over the `app://` protocol, and has a working hot-reload dev loop (`yarn desktop:dev`). The desktop-specific behaviour — native file dialogs, the native menu, file associations — lands in Phase 3. Commands marked ⏳ _not available yet_ will appear as the plan lands. See [`packages/desktop/README.md`](../README.md) for the task-by-task status and [`UPSTREAM.md`](../UPSTREAM.md) for the pinned upstream commit.
 
 ## 1. Prerequisites
 
@@ -67,9 +67,9 @@ All three must exit 0 before any change is considered done. The Vitest suite is 
 
 > **Known flaky test.** `MermaidToExcalidraw` → _"should open mermaid popup when active tool is mermaid"_ fails intermittently under load (about 1 run in 4 on a busy Windows host, 0 in 6 in isolation). The mechanism and the "do not update the snapshot" instruction are documented in [`UPSTREAM.md` §7.1](../UPSTREAM.md#71-known-flaky-upstream-test--mermaidtoexcalidraw). Re-run before investigating.
 
-## 4. Development loop — `yarn desktop:dev` ⏳ _lands in D-13_
+## 4. Development loop — `yarn desktop:dev`
 
-Once Phase 1 lands, one command starts the Vite dev server and Electron together:
+One command starts the Vite dev server and Electron together:
 
 ```bash
 yarn desktop:dev
@@ -95,6 +95,8 @@ Things to try once it runs:
 - Edit a label in the editor and confirm the window hot-reloads.
 - Confirm **no stray browser tab opens** — the Vite server's `server.open` is disabled in desktop mode.
 - Open DevTools with `Ctrl+Shift+I` (only enabled when `EXCALIDRAW_DESKTOP_DEVTOOLS=1`).
+
+> **Until D-14 lands**, the dev server runs without a `.env.desktop` file, so it inherits neither `.env.development` nor a desktop env — the editor works, but the dev-only extras (the ESLint overlay, the dev backend URLs) are absent. D-14 adds the desktop env file.
 
 ## 5. Packaged build — `yarn desktop:dist` ⏳ _lands in D-33_
 

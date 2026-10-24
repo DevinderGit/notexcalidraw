@@ -199,7 +199,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
     - `desktop:dev`: concurrently run `yarn --cwd excalidraw-app dev:vite` (new alias script that runs `vite` with `--mode desktop`, see D-14; sets `VITE_APP_PORT=3001`) and `yarn workspace @excalidraw/desktop watch:electron` with `ELECTRON_RENDERER_URL=http://localhost:3001`, Electron spawned only after the dev server responds (poll `http://localhost:3001` or use `wait-on`).
   - Patch (sanctioned, D-14's config work enables it) the Vite `server.open: true` behavior so dev mode under Electron doesn't pop a browser tab: gate on mode `desktop` → `open: false`.
 - **AC**:
-  - [ ] `yarn desktop:dev` gives a working Electron window with HMR (edit a component label → hot reload visible); no stray browser tab.
+  - [x] `yarn desktop:dev` gives a working Electron window with HMR (edit a component label → hot reload visible); no stray browser tab.
 
 ### Phase 2 — Renderer integration & boot-time wiring
 
