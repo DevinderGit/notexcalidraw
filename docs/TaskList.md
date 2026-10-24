@@ -134,7 +134,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - **Rationale:** sandboxed renderers require CommonJS preloads; main process CJS avoids ESM `app.whenReady` pitfalls.
   - Add workspace scripts: `build:electron`, `watch:electron` (esbuild `--watch`).
 - **AC**:
-  - [ ] `yarn workspace @excalidraw/desktop build:electron` emits both `.cjs` artifacts; artifacts load in a bare Electron smoke (`electron dist/electron/main.cjs` shows an empty window).
+  - [x] `yarn workspace @excalidraw/desktop build:electron` emits both `.cjs` artifacts; artifacts load in a bare Electron smoke (`electron dist/electron/main.cjs` shows an empty window).
 
 #### D-08 | Main process skeleton: lifecycle + security posture + single instance
 

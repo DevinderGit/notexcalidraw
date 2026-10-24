@@ -81,6 +81,15 @@ What happens:
 2. Electron is launched only after the dev server answers (`wait-on`), so the window never loads a blank page.
 3. The renderer loads `http://localhost:3001` (not `app://`) — this is the dev branch of the serving model. In a packaged build the renderer loads `app://excalidraw/index.html` instead.
 
+The Electron main process and preload are bundled separately, by esbuild:
+
+```bash
+yarn workspace @excalidraw/desktop build:electron   # one-shot
+yarn workspace @excalidraw/desktop watch:electron   # rebuild on change
+```
+
+Both emit CommonJS into `packages/desktop/dist/electron/` — a sandboxed renderer needs a CommonJS preload script, and a CommonJS main process avoids the ESM `app.whenReady()` pitfalls. `yarn desktop:dev` runs the watcher for you.
+
 Things to try once it runs:
 
 - Edit a label in the editor and confirm the window hot-reloads.

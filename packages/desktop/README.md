@@ -23,7 +23,8 @@ This workspace holds everything we build: the Electron main process, the preload
 | D-04 CI baseline workflow | ✅ done | `.github/workflows/ci-desktop.yml` — green on first push to `desktop-v1` |
 | D-05 Desktop dev-docs entry | ✅ done | [`docs/getting-started.md`](./docs/getting-started.md) |
 | D-06 Scaffold `packages/desktop` workspace | ✅ done | Workspace, pinned deps (Electron 45.0.0), `yarn.lock` updated |
-| D-07 Electron build pipeline (esbuild → CJS) | ⏳ next | Phase 1 — the first Electron window |
+| D-07 Electron build pipeline (esbuild → CJS) | ✅ done | `build:electron` / `watch:electron` → `dist/electron/*.cjs` |
+| D-08 Main process skeleton | ⏳ next | Phase 1 — window security posture + single instance |
 
 The workspace is scaffolded (D-06), but it holds no application code yet — `src/` is an empty skeleton. The Electron sources land from **D-07** onward: `main.ts` + `preload.ts` (D-07), `windows.ts` (D-08), `protocol.ts` (D-09), `bridge-contract.ts` (D-10).
 
@@ -85,13 +86,15 @@ Desktop-owned code lives in two places. Everything else is upstream and shared.
 
 ```
 packages/desktop/                     ← this workspace (all new desktop code)
-  src/electron/                       main process: main.ts, menu.ts, protocol.ts,
-                                      windows.ts, ipc/            (lands in D-06…D-13)
-  src/electron/preload.ts             contextBridge preload                (D-10)
+  src/electron/main.ts                main process entry point              (D-07)
+  src/electron/preload.ts             contextBridge preload                (D-07 → D-10)
+  src/electron/                       menu.ts, protocol.ts, windows.ts,
+                                      ipc/                       (lands in D-08…D-21)
+  scripts/build-electron.mjs          esbuild bundler (main + preload)     (D-07)
   src/shared/bridge-contract.ts       the frozen DesktopBridge contract    (D-10)
   src/renderer/                       renderer-side modules               (D-20)
   build/                              icons + electron-builder assets      (D-30…D-32)
-  dist/                               build output (gitignored)
+  dist/electron/                      build output (gitignored)
   electron-builder.yml                packaging config                     (D-30)
   UPSTREAM.md                         pin + sync policy                    (D-01)
   docs/                               dev docs                             (D-05)
@@ -115,6 +118,8 @@ All commands are run from the **monorepo root** unless stated otherwise. Command
 | `yarn test:code` | `eslint --max-warnings=0 --ext .js,.ts,.tsx .` — lint. Warnings are failures. |
 | `yarn test:app --watch=false` | Vitest — the upstream suite, the project's regression oracle. |
 | `yarn test:all` | All four of the above, plus `test:other` (Prettier). |
+| `yarn workspace @excalidraw/desktop build:electron` | Bundle the Electron main + preload to `packages/desktop/dist/electron/*.cjs`. |
+| `yarn workspace @excalidraw/desktop watch:electron` | Same, rebuilding on every source change. |
 
 ### Lands as the phases progress
 
@@ -122,8 +127,6 @@ All commands are run from the **monorepo root** unless stated otherwise. Command
 | --- | --- | --- |
 | `yarn --cwd excalidraw-app dev:vite` | D-14 | Vite dev server in `desktop` mode on port 3001 (HMR). |
 | `yarn --cwd excalidraw-app build:desktop` | D-14 | Production webapp build with PWA suppressed → `excalidraw-app/build/`. |
-| `yarn workspace @excalidraw/desktop build:electron` | D-07 | esbuild → `dist/electron/{main,preload}.cjs` (CommonJS, `platform: node`). |
-| `yarn workspace @excalidraw/desktop watch:electron` | D-07 | Same, in esbuild watch mode. |
 | `yarn desktop:dev` | D-13 | Vite (HMR) + Electron together, Electron launched once the dev server answers. |
 | `yarn desktop:build` | D-14 | `build:desktop` + `build:electron`. |
 | `yarn desktop:dist` | D-33 | Full packaging graph → `packages/desktop/release/*.exe` (NSIS installer). |
