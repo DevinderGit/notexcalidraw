@@ -6,6 +6,8 @@
   "license": "MIT",
   "main": "dist/electron/main.cjs",
   "scripts": {
+    "build:electron": "node scripts/build-electron.mjs",
+    "watch:electron": "node scripts/build-electron.mjs --watch",
     "install:electron": "install-electron",
     "postinstall": "install-electron || echo '[desktop] electron binary unavailable - run: yarn workspace @excalidraw/desktop install:electron'"
   },
