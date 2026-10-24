@@ -2,7 +2,7 @@
 
 Everything you need to get the desktop shell running on a fresh Windows machine, plus what to do when something goes wrong.
 
-> **Status.** This project is in **Phase 1** of the plan. The Electron shell exists and boots a window, but it does not yet serve the editor — the `app://` protocol handler lands in **D-09** and the HMR dev loop in **D-13**. Commands marked ⏳ _not available yet_ will appear as the plan lands. See [`packages/desktop/README.md`](../README.md) for the task-by-task status and [`UPSTREAM.md`](../UPSTREAM.md) for the pinned upstream commit.
+> **Status.** This project is in **Phase 1** of the plan. The Electron shell boots and serves the editor over the `app://` protocol, but the HMR dev loop lands in **D-13** and the desktop-specific behaviour (native file dialogs, menus) in Phase 3. Commands marked ⏳ _not available yet_ will appear as the plan lands. See [`packages/desktop/README.md`](../README.md) for the task-by-task status and [`UPSTREAM.md`](../UPSTREAM.md) for the pinned upstream commit.
 
 ## 1. Prerequisites
 

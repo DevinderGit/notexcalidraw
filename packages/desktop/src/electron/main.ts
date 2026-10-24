@@ -15,7 +15,18 @@
  */
 import { app, BrowserWindow } from "electron";
 
+import {
+  registerAppProtocol,
+  registerAppSchemePrivileges,
+  resolveWebappRoot,
+} from "./protocol";
 import { createMainWindow } from "./windows";
+
+// Chromium reads the privileged-scheme list while the browser process starts
+// up, so this has to happen at module top level — before `app.whenReady()`.
+// A late registration would be silently ignored and `app://` would not be a
+// standard, secure origin.
+registerAppSchemePrivileges();
 
 /**
  * Only one instance of the app may run at a time. A second launch focuses the
@@ -40,6 +51,8 @@ if (!hasSingleInstanceLock) {
   });
 
   app.whenReady().then(() => {
+    // `protocol.handle` is only available once the browser process is up.
+    registerAppProtocol(resolveWebappRoot());
     createMainWindow();
   });
 

@@ -157,8 +157,8 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
     - fallback to `index.html` for extensionless paths (SPA/hashes don't need it, but be safe).
   - Renderer load branching in `windows.ts`: if `process.env.ELECTRON_RENDERER_URL` → `loadURL(env)` (dev/HMR); else → `loadURL("app://excalidraw/index.html")`.
 - **AC**:
-  - [ ] Packaged-mode simulation: point handler at a built `excalidraw-app/build` (after D-14) — app boots from `app://excalidraw/index.html`, all assets 200, no console errors.
-  - [ ] Path traversal probe (`app://excalidraw/../../etc/passwd`) is rejected.
+  - [x] Packaged-mode simulation: point handler at a built `excalidraw-app/build` (after D-14) — app boots from `app://excalidraw/index.html`, all assets 200, no console errors.
+  - [x] Path traversal probe (`app://excalidraw/../../etc/passwd`) is rejected.
 
 #### D-10 | Preload bridge (contextBridge) + frozen contract types
 

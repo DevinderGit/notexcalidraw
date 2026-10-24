@@ -25,7 +25,8 @@ This workspace holds everything we build: the Electron main process, the preload
 | D-06 Scaffold `packages/desktop` workspace | ✅ done | Workspace, pinned deps (Electron 45.0.0), `yarn.lock` updated |
 | D-07 Electron build pipeline (esbuild → CJS) | ✅ done | `build:electron` / `watch:electron` → `dist/electron/*.cjs` |
 | D-08 Main process skeleton | ✅ done | `windows.ts` security posture, single-instance lock |
-| D-09 `app://` privileged scheme | ⏳ next | Phase 1 — serving the webapp over a real origin |
+| D-09 `app://` privileged scheme | ✅ done | `protocol.ts` — editor now renders at `app://excalidraw` |
+| D-10 Preload bridge + frozen contract | ⏳ next | Phase 1 — `window.excalidrawDesktop` |
 
 The workspace is scaffolded (D-06), but it holds no application code yet — `src/` is an empty skeleton. The Electron sources land from **D-07** onward: `main.ts` + `preload.ts` (D-07), `windows.ts` (D-08), `protocol.ts` (D-09), `bridge-contract.ts` (D-10).
 
@@ -90,8 +91,9 @@ packages/desktop/                     ← this workspace (all new desktop code)
   src/electron/main.ts                main process entry point              (D-07 → D-08)
   src/electron/preload.ts             contextBridge preload                (D-07 → D-10)
   src/electron/windows.ts             main window + security posture       (D-08)
-  src/electron/                       menu.ts, protocol.ts,
-                                      ipc/                       (lands in D-09…D-21)
+  src/electron/protocol.ts            the `app://` protocol handler         (D-09)
+  src/electron/                       menu.ts,
+                                      ipc/                       (lands in D-24…D-21)
   scripts/build-electron.mjs          esbuild bundler (main + preload)     (D-07)
   src/shared/bridge-contract.ts       the frozen DesktopBridge contract    (D-10)
   src/renderer/                       renderer-side modules               (D-20)
@@ -145,6 +147,18 @@ One upstream test is known to be flaky under load; see [`UPSTREAM.md` §7.1](./U
 Reproduced from PU §5.2, §5.4 and §5.5 — the three decisions that shape the whole integration; everything else follows from them. The prose is verbatim; the embedded code blocks are re-wrapped by the repository's Prettier configuration, so they are semantically identical to PU's but not byte-identical. **PU is the source of truth** — if the two ever disagree, PU wins.
 
 ### 5.1 Serving model — the `app://` privileged protocol (decision record)
+
+> **Implementation.** `src/electron/protocol.ts`. The renderer origin is `app://excalidraw`; the handler resolves every request inside the webapp root and rejects anything that escapes it. Verified behaviour (D-09):
+>
+> | Request | Result |
+> | --- | --- |
+> | `app://excalidraw/index.html` | `200`, `text/html; charset=utf-8` |
+> | every local asset referenced by `index.html` | `200`, correct content type |
+> | `app://excalidraw/%2e%2e%2f%2e%2e%2fetc/passwd` | `403 Forbidden` |
+> | `app://excalidraw/../../Windows/win.ini` (backslash) | `404` — stays inside the root |
+> | `app://evil.example.com/index.html` | `403 Forbidden` |
+> | `app://excalidraw/definitely-missing.js` | `404 Not found` |
+> | `app://excalidraw/some/deep/route` (no extension) | `200` — SPA fallback to `index.html` |
 
 > **Decision:** serve the Vite build from a privileged custom scheme `app://excalidraw/` rather than `file://` or a bundled localhost HTTP server.
 >

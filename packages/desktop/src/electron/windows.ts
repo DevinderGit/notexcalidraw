@@ -2,15 +2,15 @@ import path from "path";
 
 import { BrowserWindow } from "electron";
 
+import { APP_ORIGIN } from "./protocol";
+
 /**
- * Placeholder page shown until the `app://` protocol handler lands in D-09.
+ * Dev server URL, set by `yarn desktop:dev` (D-13).
  *
- * A `data:` URL is used deliberately: it needs nothing on disk and still
- * triggers a first paint, which is exactly what `ready-to-show` waits for.
- * Without a paint the window would never become visible.
+ * When it is absent the renderer is served from the `app://` protocol, which
+ * is what a packaged build does.
  */
-const PLACEHOLDER_URL =
-  "data:text/html;charset=utf-8,<title>Excalidraw</title>";
+const DEV_SERVER_URL = process.env.ELECTRON_RENDERER_URL;
 
 /**
  * Creates the main application window.
@@ -51,8 +51,13 @@ export const createMainWindow = (): BrowserWindow => {
     win.show();
   });
 
-  // D-09 replaces this with the dev-server / `app://` branch.
-  win.loadURL(PLACEHOLDER_URL);
+  // Dev mode serves the Vite dev server (hot module replacement); packaged
+  // mode serves the built webapp over the privileged `app://` scheme.
+  if (DEV_SERVER_URL) {
+    win.loadURL(DEV_SERVER_URL);
+  } else {
+    win.loadURL(`${APP_ORIGIN}/index.html`);
+  }
 
   return win;
 };
