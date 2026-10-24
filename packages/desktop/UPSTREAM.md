@@ -144,15 +144,70 @@ desktop-owned and never conflict with upstream.
 | Electron | *see §6.1* | Latest stable at scaffold time, pinned exact in `packages/desktop/package.json` (floor `^38`) — D-06 |
 | Windows build host | Windows 10/11 x64 | Required for the packaging tasks (D-30…D-35) |
 
-### 6.1 Recorded toolchain versions
+### 6.1 Recorded toolchain versions & baseline verification note
 
-> Recorded at fork time (**D-01**). **D-02** re-confirms these against the baseline
-> green-state run; update this section whenever the toolchain is re-pinned.
+> Recorded at fork time (**D-01**), re-confirmed by **D-02** (baseline green-state
+> verification). Update this section whenever the toolchain is re-pinned.
+
+**Build host**
+
+| Field | Value |
+|---|---|
+| OS | Windows 11 Pro, 25H2 (10.0.26200 build 26200) |
+| Architecture | x64 |
+| Machine | DESKTOP-N1NL0RB |
+| Developer Mode | Disabled |
+| Elevation | Not elevated (standard user) |
+| Shell | Git Bash / MinGW — nvm reports this as "unsupported"; irrelevant, all builds run through npm scripts |
+
+**Toolchain**
 
 | Tool | Version used | Notes |
 |---|---|---|
-| Node | v24.21.0 | Installed on the Windows build host |
-| Yarn | 1.22.22 | Yarn Classic, installed globally via `npm i -g yarn@1.22.22`. Matches the root `packageManager` field. |
+| Node | **v22.23.4** (LTS "Jod") | Provisioned via nvm-windows v2.0.1 (shim mode). Node 24 is explicitly out of scope for this project. |
+| npm | 10.9.9 | Bundled with Node 22.23.4 |
+| Yarn | **1.22.22** (Yarn Classic) | Matches the root `packageManager` field. Resolved through the nvm shim. |
+| Electron | *(pending — D-06)* | Latest stable at scaffold time, pinned exact in `packages/desktop/package.json` (floor `^38`) |
+
+**Getting Node 22 on this host**
+
+`node` must resolve through the nvm shim
+(`C:\Users\User\AppData\Local\Author Software\nvm\.shim`), because the **machine** PATH
+still contains the pre-existing `C:\Program Files\nodejs` (Node 24) and the *user* PATH
+is appended *after* the machine PATH — a user-level shim entry can therefore never win.
+Until the machine PATH is reordered, prefix every build command with:
+
+```bash
+export PATH="/c/Users/User/AppData/Local/Author Software/nvm/.shim:$PATH"
+```
+
+Verify with `node -v` → `v22.23.4` and `yarn -v` → `1.22.22`.
+
+**Baseline suite results (D-02)**
+
+Run at the pinned commit `ed10ac7d` on the host above, under Node v22.23.4 / Yarn 1.22.22,
+on 2026-10-24. This is the **authoritative baseline** — the upstream Vitest suite is the
+regression oracle for every later task.
+
+| Command | Exit code | Result |
+|---|---|---|
+| `yarn install` | 0 | 131 s. Workspaces hoisted (`node_modules/@excalidraw/*` symlinked to the local packages). `yarn.lock` unchanged. |
+| `yarn test:typecheck` | 0 | `tsc`, 19 s, no errors |
+| `yarn test:code` | 0 | `eslint --max-warnings=0 --ext .js,.ts,.tsx .`, 48 s, no warnings |
+| `yarn test:app --watch=false` | 0 | Vitest: **141 test files passed, 2448 tests passed**, 47 skipped, 1 todo (2496 total), 76 s |
+
+The test count matches the baseline recorded in PU §"Verification note" (2,448 tests /
+0 failures), which confirms the Windows + Node 22 host reproduces upstream's ubuntu
+result exactly. **The D-02 Windows-host escape hatch was therefore not invoked** and D-04
+was not pulled forward.
+
+Two upstream (non-failing) messages are expected on this host and are not regressions:
+
+- `eslint` prints `The prop value with an expression type of MetaProperty could not be
+  resolved` (a `jsx-ast-utils` upstream issue) — exit code is still 0.
+- `yarn install` prints `Resolution field "strip-ansi@6.0.1" is incompatible with
+  requested version "strip-ansi@^7.0.1"` and various `unmet peer dependency` warnings —
+  both are upstream lockfile/peer-range conditions, present at the pinned commit.
 
 ## 7. Local environment notes (Windows build host)
 
@@ -167,3 +222,12 @@ desktop-owned and never conflict with upstream.
   on a host with `core.autocrlf=true` can produce an "LF will be replaced by CRLF"
   warning and store CRLF in the blob. Verify with `git ls-files --eol <path>` (expect
   `i/lf w/lf`) and renormalize with `git add --renormalize <path>` if it says otherwise.
+- **Docker**: CLI 29.8.0 is installed but the Docker Desktop daemon is **not running** by
+  default. Start it before relying on a local container as an ubuntu control run; the
+  D-02 escape hatch is better served by the D-04 CI job.
+- **GitHub CLI**: `gh` is **not installed** on this host. Remotes are managed with plain
+  `git` (`git remote add` / `git push`), and the `origin` fork is
+  `https://github.com/DevinderGit/notexcalidraw.git`.
+- The account running the build is a **standard (non-elevated) user** on this machine.
+  Anything requiring administrator rights (e.g. editing the machine PATH) needs an
+  explicit UAC-approved step and cannot be done from an unattended shell.

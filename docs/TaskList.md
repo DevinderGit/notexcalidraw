@@ -70,9 +70,9 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - Record build host (OS + version + arch) and the Node/Yarn versions used in `packages/desktop/UPSTREAM.md` §6.1.
 - **Windows-host escape hatch:** upstream CIes on ubuntu only. If any suite fails on the Windows build host but passes in the D-04 CI run, record the failure as a Windows-only environment issue (linked issue in UPSTREAM.md) and treat the CI result as the authoritative baseline; WSL2 is an acceptable local fallback host.
 - **AC**:
-  - [ ] `yarn install` completes at the repo root with no errors, on Yarn Classic 1.22.22 under Node 22 LTS, with workspaces hoisted (`node_modules/@excalidraw/*` symlinked) and no unresolved dependency errors.
-  - [ ] All three commands exit 0 at baseline on the primary host (or in D-04 CI for ubuntu-authoritative resolution per the escape hatch), and the results are recorded (the upstream suite is the regression oracle for every later task).
-  - [ ] The verification note in `packages/desktop/UPSTREAM.md` §6.1 records the build host (OS, version, architecture) and the Node and Yarn versions actually used, alongside the recorded suite results.
+  - [x] `yarn install` completes at the repo root with no errors, on Yarn Classic 1.22.22 under Node 22 LTS, with workspaces hoisted (`node_modules/@excalidraw/*` symlinked) and no unresolved dependency errors.
+  - [x] All three commands exit 0 at baseline on the primary host (or in D-04 CI for ubuntu-authoritative resolution per the escape hatch), and the results are recorded (the upstream suite is the regression oracle for every later task).
+  - [x] The verification note in `packages/desktop/UPSTREAM.md` §6.1 records the build host (OS, version, architecture) and the Node and Yarn versions actually used, alongside the recorded suite results.
 
 #### D-03 | Desktop workspace README + architecture decision records
 - **Depends**: D-01 · **Est**: S
