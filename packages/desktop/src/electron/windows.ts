@@ -4,6 +4,7 @@ import path from "node:path";
 import { app, BrowserWindow, screen } from "electron";
 
 import { APP_ORIGIN } from "./protocol";
+import { applyNavigationHardening } from "./security";
 
 /**
  * Dev server URL, set by `yarn desktop:dev` (D-13).
@@ -150,6 +151,10 @@ export const createMainWindow = (): BrowserWindow => {
   win.once("ready-to-show", () => {
     win.show();
   });
+
+  // Applied here rather than by the caller, so a window can never exist
+  // without the navigation policy.
+  applyNavigationHardening(win);
 
   // Remember the geometry for the next launch.
   win.on("close", () => {

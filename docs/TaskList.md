@@ -189,7 +189,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - Route all legitimate external links (hyperlinks on canvas elements, menu socials) through `bridge.openExternal` (allowlist enforced in main).
   - `session.setPermissionRequestHandler` → deny all except `clipboard-sanitized-write` and `fullscreen`.
 - **AC**:
-  - [ ] Clicking an element hyperlink opens the OS browser, not a new Electron window; `window.open("https://…")` from devtools is denied; `will-navigate` off-origin is blocked.
+  - [x] Clicking an element hyperlink opens the OS browser, not a new Electron window; `window.open("https://…")` from devtools is denied; `will-navigate` off-origin is blocked.
 
 #### D-13 | Dev orchestration: Vite HMR + Electron
 

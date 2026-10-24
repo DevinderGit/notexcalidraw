@@ -28,9 +28,10 @@ This workspace holds everything we build: the Electron main process, the preload
 | D-09 `app://` privileged scheme | ✅ done | `protocol.ts` — editor now renders at `app://excalidraw` |
 | D-10 Preload bridge + frozen contract | ✅ done | `window.excalidrawDesktop` live in the page |
 | D-11 Window chrome (title, bounds, theme) | ✅ done | Title reflects the document; geometry persists |
-| D-12 Navigation & window-open hardening | ⏳ next | Phase 1 — external links leave the app |
+| D-12 Navigation & window-open hardening | ✅ done | External links go to the OS; no new windows |
+| D-13 Dev orchestration (Vite HMR + Electron) | ⏳ next | Phase 1 — one-command dev loop |
 
-The workspace is scaffolded (D-06), but it holds no application code yet — `src/` is an empty skeleton. The Electron sources land from **D-07** onward: `main.ts` + `preload.ts` (D-07), `windows.ts` (D-08), `protocol.ts` (D-09), `bridge-contract.ts` (D-10).
+The shell is functional: it boots a window, serves the editor over `app://excalidraw`, and exposes the bridge to the page. What is still missing is the desktop _behaviour_ — the native menu, native file dialogs and file associations all land in Phase 3.
 
 ## 2. Prerequisites
 
@@ -95,6 +96,7 @@ packages/desktop/                     ← this workspace (all new desktop code)
   src/electron/windows.ts             main window + security posture       (D-08)
   src/electron/protocol.ts            the `app://` protocol handler         (D-09)
   src/electron/ipc/app.ts             desktop:app:* handlers (title, theme) (D-11)
+  src/electron/security.ts            navigation + permission policy          (D-12)
   src/electron/                       menu.ts,
                                       ipc/fs.ts                   (lands in D-21…D-24)
   scripts/build-electron.mjs          esbuild bundler (main + preload)     (D-07)
@@ -209,7 +211,20 @@ Reproduced from PU §5.2, §5.4 and §5.5 — the three decisions that shape the
 > - `isImageFileHandle()` branching for image-export-then-resave flows never calls `getFile()` on desktop handles (the adapter intercepts first) — asserted in code comments and tests (D-22).
 > - Token→path mappings live only in main-process memory; cross-session persistence comes from the recent-files store (D-28), and re-issued handles per session are by design (a new session re-binds via open/save/open-with).
 
-## 6. Diff-surface budget
+## 6. Security posture
+
+The renderer runs a full editor that renders **user-supplied hyperlinks on canvas elements**, so the navigation policy is closed off in the main process (never in the renderer, which can only ask). See `src/electron/security.ts`.
+
+| Policy | Behaviour |
+| --- | --- |
+| `window.open()` | **Never** creates an Electron window. An `https:` link is handed to the operating system's browser; anything else is dropped. |
+| Off-origin navigation | `will-navigate` is denied for anything that is not `app://excalidraw/…` (or the dev server's origin). |
+| External URL allowlist | `https:` only — `http:`, `file:`, `javascript:` and malformed URLs are refused. |
+| Capability requests | Everything is denied except `clipboard-sanitized-write` and `fullscreen`. |
+
+Verified behaviour (D-12): clicking an `https:` hyperlink opened the OS browser and created **zero** new Electron windows; `window.open("https://…")` was denied as a window; `location.href = "https://…"` left the renderer on `app://excalidraw/index.html`; geolocation and camera requests were denied silently, with no prompt.
+
+## 7. Diff-surface budget
 
 Upstream code under `packages/*` and `excalidraw-app/*` is a **shared asset with upstream**. Only these seven files may be modified, and only in the way the referencing task prescribes. This table is also the rebase-conflict checklist during upstream syncs — see [`UPSTREAM.md` §5](./UPSTREAM.md#5-rebase-conflict-checklist).
 
@@ -225,7 +240,7 @@ Upstream code under `packages/*` and `excalidraw-app/*` is a **shared asset with
 
 Anything else under `excalidraw-app/` or `packages/` requires a **new** desktop-owned module (e.g. `excalidraw-app/desktop/**`, `packages/desktop/**`) instead of editing shared files. New files are unrestricted. Root-level files (`package.json`, `vitest.config.mts`, `.env.desktop`, `.github/workflows/*`) are outside the budget but still tracked in the rebase checklist.
 
-## 7. Scope of v1.0
+## 8. Scope of v1.0
 
 **In:** native open/save dialogs, `.excalidraw` / `.excalidrawlib` file associations, silent re-save (true desktop Save semantics), recent files, Windows jump list, NSIS per-user installer.
 
@@ -235,7 +250,7 @@ Anything else under `excalidraw-app/` or `packages/` requires a **new** desktop-
 
 **Out of scope:** auto-update, system tray, `excalidraw://` deep links, multi-window, macOS/Linux targets, code signing (scaffolding only, D-34).
 
-## 8. Contribution rules
+## 9. Contribution rules
 
 1. One task (`D-NN`) at a time, in numeric order within a phase; phases run 0 → 5.
 2. Never start a task whose `Depends` are not complete and checked off.
@@ -244,7 +259,7 @@ Anything else under `excalidraw-app/` or `packages/` requires a **new** desktop-
 5. Ask before implementing; wait for confirmation.
 6. Update `docs/TaskList.md` only after the implementation is verified by a human — check off ACs, and add no commentary, timestamps or history.
 
-## 9. Where the app stores things
+## 10. Where the app stores things
 
 | What | Where | Notes |
 | --- | --- | --- |
@@ -252,7 +267,7 @@ Anything else under `excalidraw-app/` or `packages/` requires a **new** desktop-
 | Scene, UI state, theme | `localStorage` in the renderer | Inherited from upstream — Chromium's profile, i.e. `%APPDATA%/Excalidraw` in a packaged build. |
 | Binary files (images) | IndexedDB `files-db` | Inherited from upstream. |
 
-## 10. Related documents
+## 11. Related documents
 
 | Document | Contents |
 | --- | --- |

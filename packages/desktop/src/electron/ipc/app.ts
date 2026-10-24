@@ -1,6 +1,7 @@
 import { ipcMain, nativeTheme, BrowserWindow } from "electron";
 
 import { applyDocumentState } from "../windows";
+import { openExternalUrl } from "../security";
 
 import type { DesktopTheme } from "../../shared/bridge-contract";
 
@@ -40,5 +41,11 @@ export const registerAppIpcHandlers = (): void => {
 
   ipcMain.handle("desktop:app:theme", (_event, theme) => {
     applyTheme(theme);
+  });
+
+  // The renderer may only ask the operating system to open a link; the
+  // allowlist is applied here, in the main process.
+  ipcMain.handle("desktop:shell:openExternal", (_event, url) => {
+    void openExternalUrl(typeof url === "string" ? url : "");
   });
 };
