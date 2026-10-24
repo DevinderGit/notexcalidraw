@@ -191,3 +191,30 @@ Two upstream (non-failing) messages are expected on this host and are not regres
 - **Docker**: CLI 29.8.0 is installed but the Docker Desktop daemon is **not running** by default. Start it before relying on a local container as an ubuntu control run; the D-02 escape hatch is better served by the D-04 CI job.
 - **GitHub CLI**: `gh` is **not installed** on this host. Remotes are managed with plain `git` (`git remote add` / `git push`), and the `origin` fork is `https://github.com/DevinderGit/notexcalidraw.git`.
 - The account running the build is a **standard (non-elevated) user** on this machine. Anything requiring administrator rights (e.g. editing the machine PATH) needs an explicit UAC-approved step and cannot be done from an unattended shell.
+
+### 7.1 Known flaky upstream test — `MermaidToExcalidraw`
+
+`packages/excalidraw/tests/MermaidToExcalidraw.test.tsx` → _"should open mermaid popup when active tool is mermaid"_ is a **pre-existing upstream flake**. It is not caused by any desktop change, and it is **not** a regression introduced by this fork.
+
+**Mechanism.** The test waits for the dialog's canvas _element_ and then snapshots the whole dialog:
+
+```tsx
+await waitFor(() => expect(dialog.querySelector("canvas")).not.toBeNull());
+expect(normalizeDialogSnapshot(dialog)).toMatchSnapshot();
+```
+
+The canvas element also exists in the dialog's **error** state (inside `ttd-dialog-output-canvas-container invisible`). Mermaid's render is async, so under load the `waitFor` resolves before the render completes, the dialog is momentarily in the `Invalid mermaid definition` state, and the snapshot captures the error markup instead of the rendered canvas.
+
+**Measured on this host (2026-10-24, Node 22.23.4):**
+
+| Scenario                                     | Result              |
+| -------------------------------------------- | ------------------- |
+| Full suite (`yarn test:app --watch=false`)   | 1 failure in 4 runs |
+| That test in isolation (`vitest run <file>`) | 6 / 6 passed        |
+
+**Do not "fix" it by updating the snapshot** — that would mask a real upstream race and diverge from upstream. The upstream test file is also outside the diff-surface budget, so it must not be edited. If a CI run turns red on this test, re-run the suite: it is this flake unless the failure message differs.
+
+This matters for two planned tasks:
+
+- **D-04** — the first CI push may go red on this test alone. Do not weaken the gate to hide it; re-run and confirm.
+- **D-37** — the e2e flake budget is < 5 % across 10 runs. This upstream flake does not affect the Playwright e2e suite, but it does eat into the Vitest budget, so measure the two separately.
