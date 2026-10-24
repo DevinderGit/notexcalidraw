@@ -58,8 +58,8 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - Create long-lived integration branch `desktop-v1` from the pinned baseline commit (`ed10ac7dca7e40f3f4a31269b4bfba980d0db41e`).
   - Record upstream tag/commit pinned in `packages/desktop/UPSTREAM.md` with sync procedure from PU §6.4.
 - **AC**:
-  - [ ] `git remote -v` shows both remotes; `git log -1` on `desktop-v1` equals the pinned commit.
-  - [ ] `packages/desktop/UPSTREAM.md` exists and states the pin + sync policy.
+  - [x] `git remote -v` shows both remotes; `git log -1` on `desktop-v1` equals the pinned commit.
+  - [x] `packages/desktop/UPSTREAM.md` exists and states the pin + sync policy.
 
 #### D-02 | Baseline green-state verification
 - **Depends**: D-01 · **Est**: S

@@ -28,7 +28,7 @@ invalidates every `packages/desktop/**` line-number reference in `TaskList.md`.
 | `desktop-v1` | Long-lived integration branch. All desktop work lands here. Its base is the pinned commit. |
 | `upstream/master` | Remote-tracking ref for upstream's development line, fetched for diffing. Not a working branch — never commit to it. |
 | `v*` tags | Upstream release tags, fetched from `upstream`. Sync targets (§3). |
-| `main` | Local-only branch holding the initial project-docs import commit. Not a working branch; it will be repointed at the pinned commit (or dropped) before the first push to `origin`. |
+| `main` | Local mirror of the upstream baseline, pointing at the pinned commit. Not a working branch — `desktop-v1` is where work happens. Useful as the fork's default branch on GitHub. |
 
 Rules:
 
@@ -146,13 +146,13 @@ desktop-owned and never conflict with upstream.
 
 ### 6.1 Recorded toolchain versions
 
-> Populated by **D-02** (baseline green-state verification). Do not edit by hand; update
-> this section when the toolchain is re-pinned.
+> Recorded at fork time (**D-01**). **D-02** re-confirms these against the baseline
+> green-state run; update this section whenever the toolchain is re-pinned.
 
 | Tool | Version used | Notes |
 |---|---|---|
 | Node | v24.21.0 | Installed on the Windows build host |
-| Yarn | *(pending — D-02)* | Yarn Classic 1.22.22 must be installed; it was not present on the build host at fork time |
+| Yarn | 1.22.22 | Yarn Classic, installed globally via `npm i -g yarn@1.22.22`. Matches the root `packageManager` field. |
 
 ## 7. Local environment notes (Windows build host)
 
