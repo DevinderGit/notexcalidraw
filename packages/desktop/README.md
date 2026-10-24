@@ -19,8 +19,8 @@ This workspace holds everything we build: the Electron main process, the preload
 | D-01 Fork, remotes, branch model | ✅ done | `desktop-v1` based on pinned commit `ed10ac7d` |
 | D-02 Baseline green-state verification | ✅ done | Windows + Node 22.23.4: all suites green (2,448 tests) |
 | D-03 This README | ✅ done | — |
-| D-04 CI baseline workflow | ⏳ next | Needs `desktop-v1` pushed to the fork ✅ (done) |
-| D-05 Desktop dev-docs entry | ⏳ planned | `packages/desktop/docs/getting-started.md` |
+| D-04 CI baseline workflow | ✅ done | `.github/workflows/ci-desktop.yml` — green on first push to `desktop-v1` |
+| D-05 Desktop dev-docs entry | ⏳ next | `packages/desktop/docs/getting-started.md` |
 
 Nothing in `packages/desktop/src/` exists yet — the Electron workspace is scaffolded in **D-06**. Until then this directory holds only documentation.
 
@@ -89,6 +89,12 @@ All commands are run from the **monorepo root** unless stated otherwise. Command
 | `yarn desktop:build` | D-14 | `build:desktop` + `build:electron`. |
 | `yarn desktop:dist` | D-33 | Full packaging graph → `packages/desktop/release/*.exe` (NSIS installer). |
 | `yarn workspace @excalidraw/desktop dist:win` | D-33 | `electron-builder --win` on its own. |
+
+### Continuous integration
+
+`.github/workflows/ci-desktop.yml` gates `desktop-v1` on every push and pull request. It runs on `ubuntu-latest` with Node 22 and a Yarn cache, then executes the same three gates as the local DoD: `yarn test:typecheck`, `yarn test:code`, `yarn test:app --watch=false`. The upstream Vitest suite is the regression oracle — a red run means upstream behaviour was broken.
+
+One upstream test is known to be flaky under load; see [`UPSTREAM.md` §7.1](./UPSTREAM.md#71-known-flaky-upstream-test--mermaidtoexcalidraw).
 
 ## 5. Architecture decision records
 

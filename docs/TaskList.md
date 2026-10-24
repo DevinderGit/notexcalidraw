@@ -92,7 +92,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - Add `.github/workflows/ci-desktop.yml`: on `push`/`pull_request` → `desktop-v1`; matrix `ubuntu-latest`; steps: `yarn install --frozen-lockfile`, `yarn test:typecheck`, `yarn test:code`, `yarn test:app --watch=false`.
   - Enable Yarn cache (`actions/setup-node` `cache: yarn`).
 - **AC**:
-  - [ ] Workflow runs green on first push to `desktop-v1`.
+  - [x] Workflow runs green on first push to `desktop-v1`.
 
 #### D-05 | Desktop dev-docs entry
 
