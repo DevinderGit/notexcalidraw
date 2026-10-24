@@ -144,7 +144,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - `main.ts`: `app.requestSingleInstanceLock()`; on `second-instance` → focus main window (argv file forwarding lands in D-26); `window-all-closed` → `app.quit()` (no macOS menu-bar residency in v1.0).
   - Enforce: no `remote` module, no `webSecurity: false`, `webContents` `devTools` open only when `process.env.EXCALIDRAW_DESKTOP_DEVTOOLS === "1"`.
 - **AC**:
-  - [ ] App boots a window; second launch focuses the first; `process.argv` contract documented in code comments for D-26.
+  - [x] App boots a window; second launch focuses the first; `process.argv` contract documented in code comments for D-26.
 
 #### D-09 | `app://` privileged scheme + static protocol handler
 

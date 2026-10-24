@@ -24,7 +24,8 @@ This workspace holds everything we build: the Electron main process, the preload
 | D-05 Desktop dev-docs entry | ✅ done | [`docs/getting-started.md`](./docs/getting-started.md) |
 | D-06 Scaffold `packages/desktop` workspace | ✅ done | Workspace, pinned deps (Electron 45.0.0), `yarn.lock` updated |
 | D-07 Electron build pipeline (esbuild → CJS) | ✅ done | `build:electron` / `watch:electron` → `dist/electron/*.cjs` |
-| D-08 Main process skeleton | ⏳ next | Phase 1 — window security posture + single instance |
+| D-08 Main process skeleton | ✅ done | `windows.ts` security posture, single-instance lock |
+| D-09 `app://` privileged scheme | ⏳ next | Phase 1 — serving the webapp over a real origin |
 
 The workspace is scaffolded (D-06), but it holds no application code yet — `src/` is an empty skeleton. The Electron sources land from **D-07** onward: `main.ts` + `preload.ts` (D-07), `windows.ts` (D-08), `protocol.ts` (D-09), `bridge-contract.ts` (D-10).
 
@@ -86,10 +87,11 @@ Desktop-owned code lives in two places. Everything else is upstream and shared.
 
 ```
 packages/desktop/                     ← this workspace (all new desktop code)
-  src/electron/main.ts                main process entry point              (D-07)
+  src/electron/main.ts                main process entry point              (D-07 → D-08)
   src/electron/preload.ts             contextBridge preload                (D-07 → D-10)
-  src/electron/                       menu.ts, protocol.ts, windows.ts,
-                                      ipc/                       (lands in D-08…D-21)
+  src/electron/windows.ts             main window + security posture       (D-08)
+  src/electron/                       menu.ts, protocol.ts,
+                                      ipc/                       (lands in D-09…D-21)
   scripts/build-electron.mjs          esbuild bundler (main + preload)     (D-07)
   src/shared/bridge-contract.ts       the frozen DesktopBridge contract    (D-10)
   src/renderer/                       renderer-side modules               (D-20)

@@ -2,7 +2,7 @@
 
 Everything you need to get the desktop shell running on a fresh Windows machine, plus what to do when something goes wrong.
 
-> **Status.** This project is in **Phase 0** of the plan. The Electron shell itself does not exist yet — it is scaffolded in **D-06** and boots in **D-13**. The commands below that are marked ⏳ _not available yet_ will appear as the plan lands. See [`packages/desktop/README.md`](../README.md) for the task-by-task status and [`UPSTREAM.md`](../UPSTREAM.md) for the pinned upstream commit.
+> **Status.** This project is in **Phase 1** of the plan. The Electron shell exists and boots a window, but it does not yet serve the editor — the `app://` protocol handler lands in **D-09** and the HMR dev loop in **D-13**. Commands marked ⏳ _not available yet_ will appear as the plan lands. See [`packages/desktop/README.md`](../README.md) for the task-by-task status and [`UPSTREAM.md`](../UPSTREAM.md) for the pinned upstream commit.
 
 ## 1. Prerequisites
 

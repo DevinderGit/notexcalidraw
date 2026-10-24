@@ -1,40 +1,50 @@
-import path from "path";
-
+/**
+ * Electron main process.
+ *
+ * `process.argv` contract — consumed by **D-26** (open-with / file associations):
+ *
+ *   - **Packaged** (`app.isPackaged === true`): `argv[0]` is the path of the
+ *     installed executable. Any file to open follows it, possibly after
+ *     Chromium or app flags.
+ *   - **Development** (`electron . <file>`): `argv[0]` is the Electron binary
+ *     and `argv[1]` is the app directory (`.`); file paths to open follow.
+ *
+ * D-26 adds `collectFilesFromArgv()` to filter the arguments down to the
+ * supported extensions (PU §4.8), and forwards them to the already-running
+ * instance through the `second-instance` event.
+ */
 import { app, BrowserWindow } from "electron";
 
+import { createMainWindow } from "./windows";
+
 /**
- * Placeholder window for the D-07 build-pipeline smoke test.
- *
- * D-08 replaces this with `createMainWindow()` in `windows.ts`, which owns the
- * full security posture (`contextIsolation`, `sandbox`, `nodeIntegration`) and
- * the single-instance lock. Nothing here is load-bearing.
- *
- * The window is shown immediately rather than on `ready-to-show`: there is no
- * page to load yet, so no first paint would ever arrive and the event would
- * never fire. D-08 restores the `show: false` + `ready-to-show` pattern once
- * the window actually loads content.
+ * Only one instance of the app may run at a time. A second launch focuses the
+ * existing window instead of starting a second copy. D-26 additionally
+ * forwards the second launch's file arguments to the running window.
  */
-const createWindow = () => {
-  const win = new BrowserWindow({
-    width: 1440,
-    height: 900,
-    backgroundColor: "#ffffff",
-    webPreferences: {
-      preload: path.join(__dirname, "preload.cjs"),
-    },
-  });
+const hasSingleInstanceLock = app.requestSingleInstanceLock();
 
-  win.once("ready-to-show", () => {
-    console.info("[desktop] main window ready to show");
-  });
-
-  console.info("[desktop] main window created");
-};
-
-app.whenReady().then(() => {
-  createWindow();
-});
-
-app.on("window-all-closed", () => {
+if (!hasSingleInstanceLock) {
   app.quit();
-});
+} else {
+  app.on("second-instance", () => {
+    const [win] = BrowserWindow.getAllWindows();
+
+    if (win) {
+      if (win.isMinimized()) {
+        win.restore();
+      }
+
+      win.focus();
+    }
+  });
+
+  app.whenReady().then(() => {
+    createMainWindow();
+  });
+
+  app.on("window-all-closed", () => {
+    // v1.0 has no macOS menu-bar residency: closing the last window quits.
+    app.quit();
+  });
+}
