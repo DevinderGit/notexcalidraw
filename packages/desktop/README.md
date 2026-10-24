@@ -26,7 +26,8 @@ This workspace holds everything we build: the Electron main process, the preload
 | D-07 Electron build pipeline (esbuild → CJS) | ✅ done | `build:electron` / `watch:electron` → `dist/electron/*.cjs` |
 | D-08 Main process skeleton | ✅ done | `windows.ts` security posture, single-instance lock |
 | D-09 `app://` privileged scheme | ✅ done | `protocol.ts` — editor now renders at `app://excalidraw` |
-| D-10 Preload bridge + frozen contract | ⏳ next | Phase 1 — `window.excalidrawDesktop` |
+| D-10 Preload bridge + frozen contract | ✅ done | `window.excalidrawDesktop` live in the page |
+| D-11 Window chrome (title, bounds, theme) | ⏳ next | Phase 1 — title bar reflects the document |
 
 The workspace is scaffolded (D-06), but it holds no application code yet — `src/` is an empty skeleton. The Electron sources land from **D-07** onward: `main.ts` + `preload.ts` (D-07), `windows.ts` (D-08), `protocol.ts` (D-09), `bridge-contract.ts` (D-10).
 
@@ -96,6 +97,7 @@ packages/desktop/                     ← this workspace (all new desktop code)
                                       ipc/                       (lands in D-24…D-21)
   scripts/build-electron.mjs          esbuild bundler (main + preload)     (D-07)
   src/shared/bridge-contract.ts       the frozen DesktopBridge contract    (D-10)
+  src/renderer/global.d.ts            Window type augmentation             (D-10)
   src/renderer/                       renderer-side modules               (D-20)
   build/                              icons + electron-builder assets      (D-30…D-32)
   dist/electron/                      build output (gitignored)

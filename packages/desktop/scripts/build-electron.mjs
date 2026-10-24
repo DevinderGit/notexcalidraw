@@ -9,7 +9,7 @@
  *   node scripts/build-electron.mjs           # one-shot build
  *   node scripts/build-electron.mjs --watch   # rebuild on change
  */
-import { rm } from "node:fs/promises";
+import { readFile, rm } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -21,6 +21,10 @@ const outDir = path.join(packageRoot, "dist", "electron");
 
 const watch = process.argv.includes("--watch");
 
+const packageJson = JSON.parse(
+  await readFile(path.join(packageRoot, "package.json"), "utf8"),
+);
+
 /** @type {import("esbuild").BuildOptions} */
 const common = {
   bundle: true,
@@ -30,6 +34,11 @@ const common = {
   external: ["electron"],
   sourcemap: true,
   logLevel: "info",
+  // The sandboxed preload cannot ask the main process for the app version, so
+  // it is baked in here from the single source of truth: package.json.
+  define: {
+    __APP_VERSION__: JSON.stringify(packageJson.version),
+  },
 };
 
 const targets = [

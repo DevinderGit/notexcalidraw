@@ -168,7 +168,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - `preload.ts`: `contextBridge.exposeInMainWorld("excalidrawDesktop", <DesktopBridge impl>)` where fs/menu/shell/open-with methods thin-wrap `ipcRenderer.invoke`/`ipcRenderer.on`. Sanitize all inputs crossing the boundary (validate filter shape, coerce paths to strings).
   - Renderer consumers get the type via declaration merging: `declare global { interface Window { excalidrawDesktop: DesktopBridge } }` (exported helper `packages/desktop/src/renderer/global.d.ts`).
 - **AC**:
-  - [ ] `window.excalidrawDesktop.isDesktop === true` inside the page; all contract members present; contract file compiles standalone (`tsc --noEmit`).
+  - [x] `window.excalidrawDesktop.isDesktop === true` inside the page; all contract members present; contract file compiles standalone (`tsc --noEmit`).
 
 #### D-11 | Window chrome: title, bounds persistence, native theme sync
 
