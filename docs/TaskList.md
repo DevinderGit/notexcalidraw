@@ -79,7 +79,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
 - **Do**:
   - Create `packages/desktop/README.md` containing: dev commands table (fills in as Phases 1–4 land), the decision records from PU §5.2/§5.4 verbatim, and the diff-surface table from §0.3.
 - **AC**:
-  - [ ] README exists; contains the three decision records and diff-surface table.
+  - [x] README exists; contains the three decision records and diff-surface table.
 
 #### D-04 | CI baseline workflow
 - **Depends**: D-02 · **Est**: S
