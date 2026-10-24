@@ -100,7 +100,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
 - **Do**:
   - Add `packages/desktop/docs/getting-started.md`: prerequisites, `yarn desktop:dev` walkthrough (added in D-13), packaged-build walkthrough (D-33), troubleshooting (WebView2 not required — Electron bundles Chromium; SmartScreen note for unsigned builds).
 - **AC**:
-  - [ ] Doc exists; referenced from `packages/desktop/README.md`.
+  - [x] Doc exists; referenced from `packages/desktop/README.md`.
 
 ### Phase 1 — Desktop workspace & Electron shell
 

@@ -6,6 +6,7 @@ This workspace holds everything we build: the Electron main process, the preload
 
 > **Companion documents**
 >
+> - [`docs/getting-started.md`](./docs/getting-started.md) — prerequisites, setup, the dev loop, the packaged build, and troubleshooting. **Start here.**
 > - [`UPSTREAM.md`](./UPSTREAM.md) — the pinned upstream commit, branch model, and the monthly rebase procedure. Read this before syncing with upstream.
 > - [`docs/ProjectUnderstanding.md`](../../docs/ProjectUnderstanding.md) — _PU_: the comprehension layer. Source architecture, target architecture, decision records, scope matrix, risk register.
 > - [`docs/TaskList.md`](../../docs/TaskList.md) — the executable plan (40 tasks, `D-01`…`D-40`). Normative; wins over PU on any contradiction.
@@ -20,7 +21,8 @@ This workspace holds everything we build: the Electron main process, the preload
 | D-02 Baseline green-state verification | ✅ done | Windows + Node 22.23.4: all suites green (2,448 tests) |
 | D-03 This README | ✅ done | — |
 | D-04 CI baseline workflow | ✅ done | `.github/workflows/ci-desktop.yml` — green on first push to `desktop-v1` |
-| D-05 Desktop dev-docs entry | ⏳ next | `packages/desktop/docs/getting-started.md` |
+| D-05 Desktop dev-docs entry | ✅ done | [`docs/getting-started.md`](./docs/getting-started.md) |
+| D-06 Scaffold `packages/desktop` workspace | ⏳ next | Phase 1 — the Electron workspace itself |
 
 Nothing in `packages/desktop/src/` exists yet — the Electron workspace is scaffolded in **D-06**. Until then this directory holds only documentation.
 
@@ -189,4 +191,4 @@ Anything else under `excalidraw-app/` or `packages/` requires a **new** desktop-
 | [`UPSTREAM.md`](./UPSTREAM.md) | Pinned commit, branch model, release-line topology, sync procedure, rebase checklist, toolchain + baseline results |
 | [`docs/ProjectUnderstanding.md`](../../docs/ProjectUnderstanding.md) | PU — source/target architecture, decision digest, scope matrix, risk register, glossary, traceability matrix |
 | [`docs/TaskList.md`](../../docs/TaskList.md) | The 40-task plan, dependencies, acceptance criteria, diff-surface budget, backlog |
-| `packages/desktop/docs/getting-started.md` | _lands in D-05_ — prerequisites, dev walkthrough, packaged-build walkthrough, troubleshooting |
+| [`docs/getting-started.md`](./docs/getting-started.md) | Prerequisites, first-time setup, test suite, dev-loop and packaged-build walkthroughs, troubleshooting |
