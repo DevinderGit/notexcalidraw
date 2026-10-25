@@ -31,7 +31,7 @@ This workspace holds everything we build: the Electron main process, the preload
 | D-12 Navigation & window-open hardening | ✅ done | External links go to the OS; no new windows |
 | D-13 Dev orchestration (Vite HMR + Electron) | ✅ done | `yarn desktop:dev` — editor with hot reload |
 | D-14 Desktop build mode (env + Vite config) | ✅ done | `yarn desktop:build` — webapp build with no service worker |
-| D-15 Service-worker suppression at runtime | ⏳ next | Phase 2 — the runtime half of the SW story |
+| D-15 Service-worker suppression at runtime | ✅ done | Desktop app registers no service worker |
 
 The shell is functional: it boots a window, serves the editor over `app://excalidraw`, and exposes the bridge to the page. What is still missing is the desktop _behaviour_ — the native menu, native file dialogs and file associations all land in Phase 3.
 
@@ -223,6 +223,7 @@ The renderer runs a full editor that renders **user-supplied hyperlinks on canva
 | Off-origin navigation | `will-navigate` is denied for anything that is not `app://excalidraw/…` (or the dev server's origin). |
 | External URL allowlist | `https:` only — `http:`, `file:`, `javascript:` and malformed URLs are refused. |
 | Capability requests | Everything is denied except `clipboard-sanitized-write` and `fullscreen`. |
+| Service worker | None in the desktop app — suppressed at build time (no worker is generated) _and_ at runtime (the registration call is skipped when the desktop bridge is present). The web build keeps registering it. |
 
 Verified behaviour (D-12): clicking an `https:` hyperlink opened the OS browser and created **zero** new Electron windows; `window.open("https://…")` was denied as a window; `location.href = "https://…"` left the renderer on `app://excalidraw/index.html`; geolocation and camera requests were denied silently, with no prompt.
 

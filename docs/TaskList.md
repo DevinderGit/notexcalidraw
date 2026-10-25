@@ -232,8 +232,8 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
   - Keep the static import (virtual module resolves because plugin stays configured with `injectRegister: null` in desktop mode — see D-14).
   - Note: upstream `public/service-worker.js` is a legacy self-destructing SW (CRA-era migration shim); in desktop mode it is never registered and is inert — no action beyond this guard.
 - **AC**:
-  - [ ] In packaged desktop build, `navigator.serviceWorker.getRegistrations()` resolves to `[]` at runtime.
-  - [ ] Web build still registers its SW (dev check with `VITE_APP_ENABLE_PWA=true`).
+  - [x] In packaged desktop build, `navigator.serviceWorker.getRegistrations()` resolves to `[]` at runtime.
+  - [x] Web build still registers its SW (dev check with `VITE_APP_ENABLE_PWA=true`).
 
 #### D-16 | Desktop bootstrap module + export-source override
 
