@@ -11,6 +11,10 @@ import { woff2BrowserPlugin } from "../scripts/woff2/woff2-vite-plugins";
 export default defineConfig(({ mode }) => {
   // To load .env variables
   const envVars = loadEnv(mode, `../`);
+
+  // Desktop mode builds the webapp for the Electron shell: no service worker,
+  // no sitemap, and no browser tab popping out of the dev server (D-14).
+  const IS_DESKTOP = mode === "desktop";
   // https://vitejs.dev/config/
   return {
     server: {
@@ -133,13 +137,14 @@ export default defineConfig(({ mode }) => {
       assetsInlineLimit: 0,
     },
     plugins: [
-      Sitemap({
-        hostname: "https://excalidraw.com",
-        outDir: "build",
-        changefreq: "monthly",
-        // its static in public folder
-        generateRobotsTxt: false,
-      }),
+      !IS_DESKTOP &&
+        Sitemap({
+          hostname: "https://excalidraw.com",
+          outDir: "build",
+          changefreq: "monthly",
+          // its static in public folder
+          generateRobotsTxt: false,
+        }),
       woff2BrowserPlugin(),
       react(),
       checker({
@@ -147,7 +152,14 @@ export default defineConfig(({ mode }) => {
         eslint:
           envVars.VITE_APP_ENABLE_ESLINT === "false"
             ? undefined
-            : { lintCommand: 'eslint "./**/*.{js,ts,tsx}"' },
+            : {
+                // The repo's .eslintignore lives at the workspace root, but
+                // the checker runs with the app as its working directory — so
+                // ESLint does not find it and lints the previous build output
+                // (minified bundles), which makes the build take minutes.
+                lintCommand:
+                  'eslint "./**/*.{js,ts,tsx}" --ignore-path "../.eslintignore"',
+              },
         overlay: {
           initialIsOpen: envVars.VITE_APP_COLLAPSE_OVERLAY === "false",
           badgeStyle: "margin-bottom: 4rem; margin-left: 1rem",
@@ -316,6 +328,13 @@ export default defineConfig(({ mode }) => {
             },
           ],
         },
+        // Desktop mode: the service worker is suppressed entirely.
+        //
+        // The plugin stays configured so that `virtual:pwa-register` still
+        // resolves — the app imports that module unconditionally — but it
+        // injects no registration script and generates no worker. D-15 adds
+        // the matching runtime guard.
+        ...(IS_DESKTOP ? { injectRegister: null, disable: true } : {}),
       }),
       createHtmlPlugin({
         minify: true,

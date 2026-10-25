@@ -221,8 +221,8 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
     - gate `server.open` → `false` when `mode === "desktop"` (completes D-13).
   - Add excalidraw-app script `dev:vite` (`vite`) and `build:desktop` (`cross-env vite build --mode desktop`); root aliases `desktop:build` → runs `build:desktop` then `yarn workspace @excalidraw/desktop build:electron`.
 - **AC**:
-  - [ ] `yarn --cwd excalidraw-app build:desktop` produces `build/` with **no `sw.js` registration call** in the emitted `index.html` (grep: no `registerSW` inlined; `manifest.webmanifest` absence acceptable).
-  - [ ] Web production build (`yarn build:app`) is byte-identical in behavior to baseline (PWA still registers — spot-check `index.html`).
+  - [x] `yarn --cwd excalidraw-app build:desktop` produces `build/` with **no `sw.js` registration call** in the emitted `index.html` (grep: no `registerSW` inlined; `manifest.webmanifest` absence acceptable).
+  - [x] Web production build (`yarn build:app`) is byte-identical in behavior to baseline (PWA still registers — spot-check `index.html`).
 
 #### D-15 | Service-worker suppression at runtime
 

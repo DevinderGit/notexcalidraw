@@ -96,7 +96,7 @@ Things to try once it runs:
 - Confirm **no stray browser tab opens** — the Vite server's `server.open` is disabled in desktop mode.
 - Open DevTools with `Ctrl+Shift+I` (only enabled when `EXCALIDRAW_DESKTOP_DEVTOOLS=1`).
 
-> **Until D-14 lands**, the dev server runs without a `.env.desktop` file, so it inherits neither `.env.development` nor a desktop env — the editor works, but the dev-only extras (the ESLint overlay, the dev backend URLs) are absent. D-14 adds the desktop env file.
+> **Desktop mode env.** The dev server and the desktop build both run with Vite's `desktop` mode, which loads the repo-root `.env.desktop` — not `.env.development`. The editor works; the dev-only extras (the dev backend URLs for collab/share/library) are absent, which matches a desktop app anyway. The ESLint overlay still runs, because `.env.desktop` does not disable it.
 
 ## 5. Packaged build — `yarn desktop:dist` ⏳ _lands in D-33_
 
@@ -141,6 +141,14 @@ Use `yarn install --frozen-lockfile` in CI. Locally, a plain `yarn install` may 
 ### Port 3001 is already in use
 
 The Vite dev server needs port 3001. Stop whatever is using it (`netstat -ano | findstr :3001`), or change the port in the desktop Vite config — but keep `ELECTRON_RENDERER_URL` in sync with it.
+
+### The desktop build suddenly takes minutes instead of seconds
+
+The Vite build runs ESLint as a checker, and ESLint looks for `.eslintignore` in its working directory — the app, not the repo root. Without the root ignore file it lints the _previous build output_ (minified bundles), which is pathologically slow. The desktop-mode lint command passes `--ignore-path "../.eslintignore"` for exactly this reason. If you invoke ESLint by hand from `excalidraw-app/`, pass the same flag.
+
+### A web build differs from the baseline after a desktop build
+
+Vite's dependency-optimizer cache can be left holding the other mode's environment defines, which silently changes the built bundle. The fix is to clear `excalidraw-app/node_modules/.vite` (and `node_modules/.vite`, if a stray root-level Vite run ever created one) and rebuild.
 
 ### The Vitest suite fails on `MermaidToExcalidraw`
 
