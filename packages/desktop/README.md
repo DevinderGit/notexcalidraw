@@ -32,6 +32,8 @@ This workspace holds everything we build: the Electron main process, the preload
 | D-13 Dev orchestration (Vite HMR + Electron) | ✅ done | `yarn desktop:dev` — editor with hot reload |
 | D-14 Desktop build mode (env + Vite config) | ✅ done | `yarn desktop:build` — webapp build with no service worker |
 | D-15 Service-worker suppression at runtime | ✅ done | Desktop app registers no service worker |
+| D-16 Desktop bootstrap + export source | ✅ done | Exported files keep the upstream `source` |
+| D-17 Cloud-feature & Excalidraw+ UI gating | ⏳ next | Phase 2 — hide the web-only features |
 
 The shell is functional: it boots a window, serves the editor over `app://excalidraw`, and exposes the bridge to the page. What is still missing is the desktop _behaviour_ — the native menu, native file dialogs and file associations all land in Phase 3.
 
@@ -113,7 +115,7 @@ packages/desktop/                     ← this workspace (all new desktop code)
 
 excalidraw-app/desktop/               ← renderer-side bootstrap glue       (D-16)
   bootstrap.ts                        desktop-only boot module
-  config.ts                           IS_DESKTOP flag
+  config.ts                           IS_DESKTOP flag                    (D-17)
   menuCommands.tsx                    native menu → ActionManager          (D-25)
 ```
 
@@ -224,6 +226,7 @@ The renderer runs a full editor that renders **user-supplied hyperlinks on canva
 | External URL allowlist | `https:` only — `http:`, `file:`, `javascript:` and malformed URLs are refused. |
 | Capability requests | Everything is denied except `clipboard-sanitized-write` and `fullscreen`. |
 | Service worker | None in the desktop app — suppressed at build time (no worker is generated) _and_ at runtime (the registration call is skipped when the desktop bridge is present). The web build keeps registering it. |
+| Analytics | None. The upstream HTML template loads a legacy Simple Analytics script whenever Vite's `PROD` flag is set — and `vite build` sets that for every mode. The desktop build forces it off (`PROD: false` in the HTML plugin's injected data). The web build is unchanged. |
 
 Verified behaviour (D-12): clicking an `https:` hyperlink opened the OS browser and created **zero** new Electron windows; `window.open("https://…")` was denied as a window; `location.href = "https://…"` left the renderer on `app://excalidraw/index.html`; geolocation and camera requests were denied silently, with no prompt.
 

@@ -6,6 +6,12 @@ import "../excalidraw-app/sentry";
 
 import ExcalidrawApp from "./App";
 
+// The desktop shell's bootstrap. Guarded so a web build never loads it — Vite
+// splits it into its own chunk, which the web bundle simply never fetches.
+if (window.excalidrawDesktop?.isDesktop) {
+  void import("./desktop/bootstrap");
+}
+
 window.__EXCALIDRAW_SHA__ = import.meta.env.VITE_APP_GIT_SHA;
 const rootElement = document.getElementById("root")!;
 const root = createRoot(rootElement);

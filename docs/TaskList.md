@@ -246,7 +246,7 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
     4. install the confirm-close handler (D-27).
   - `excalidraw-app/index.tsx` (sanctioned diff): top-of-module guarded dynamic import: `if (window.excalidrawDesktop?.isDesktop) { void import("./desktop/bootstrap"); }` (dynamic import → Vite code-splits; web bundle carries only an inert async chunk).
 - **AC**:
-  - [ ] In desktop dev mode, `window.EXCALIDRAW_EXPORT_SOURCE` is set before any export happens; web build shows no bootstrap code on the critical path (network tab: no `bootstrap` chunk loaded).
+  - [x] In desktop dev mode, `window.EXCALIDRAW_EXPORT_SOURCE` is set before any export happens; web build shows no bootstrap code on the critical path (network tab: no `bootstrap` chunk loaded).
 
 #### D-17 | Cloud-feature & Excalidraw+ UI gating
 
