@@ -338,6 +338,14 @@ export default defineConfig(({ mode }) => {
       }),
       createHtmlPlugin({
         minify: true,
+        // The HTML template gates its legacy Simple Analytics loader on Vite's
+        // built-in `PROD` flag — and `vite build` sets that to true for every
+        // mode, desktop included. A desktop app must not phone home to an
+        // analytics CDN (PU §4.7), so it is forced off here.
+        //
+        // `VITE_APP_ENABLE_TRACKING=false` (in `.env.desktop`) only covers the
+        // in-app tracking module; it does not affect this inline loader.
+        ...(IS_DESKTOP ? { inject: { data: { PROD: false } } } : {}),
       }),
     ],
     publicDir: "../public",
