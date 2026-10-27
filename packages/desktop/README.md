@@ -33,7 +33,8 @@ This workspace holds everything we build: the Electron main process, the preload
 | D-14 Desktop build mode (env + Vite config) | ✅ done | `yarn desktop:build` — webapp build with no service worker |
 | D-15 Service-worker suppression at runtime | ✅ done | Desktop app registers no service worker |
 | D-16 Desktop bootstrap + export source | ✅ done | Exported files keep the upstream `source` |
-| D-17 Cloud-feature & Excalidraw+ UI gating | ⏳ next | Phase 2 — hide the web-only features |
+| D-17 Cloud-feature & Excalidraw+ UI gating | ✅ done | Collab, share and Plus UI hidden in desktop |
+| D-18 Offline/asset-origin audit | ⏳ next | Phase 2 — prove the app works offline |
 
 The shell is functional: it boots a window, serves the editor over `app://excalidraw`, and exposes the bridge to the page. What is still missing is the desktop _behaviour_ — the native menu, native file dialogs and file associations all land in Phase 3.
 
@@ -253,6 +254,8 @@ Anything else under `excalidraw-app/` or `packages/` requires a **new** desktop-
 **Inherited unmodified from upstream:** the whole editor (canvas, tools, text, frames, laser, stats, command palette), localStorage + IndexedDB persistence, PNG/SVG/clipboard export, library browsing.
 
 **Deliberately off in desktop builds:** service worker / PWA, Sentry, analytics, live collaboration UI, share-link UI, Excalidraw+ promo/export UI.
+
+Live collaboration can be re-enabled with `VITE_APP_DESKTOP_ENABLE_COLLAB=true`, but it should stay off until collab room links stop being minted from `window.location.origin` (which is `app://excalidraw` under the app scheme — a link no browser peer can open).
 
 **Out of scope:** auto-update, system tray, `excalidraw://` deep links, multi-window, macOS/Linux targets, code signing (scaffolding only, D-34).
 

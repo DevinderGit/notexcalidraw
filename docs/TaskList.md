@@ -258,8 +258,8 @@ Estimate scale: **S** ≤ ½ day · **M** ≤ 1–2 days · **L** ≥ 3 days (ag
     - **share-link UI hidden in desktop:** the "share" dialog trigger in `App.tsx` (L1012 `setShareDialogState({ isOpen: true, type: "share" })`) and the `ShareDialog` mount (L1086) are gated on `!IS_DESKTOP` — minted share links stamp `window.location.href` (`data/index.ts` L283–285) and would read `app://excalidraw/#json=…`, unusable in browsers. Upload machinery (`exportToBackend`) and library browsing stay enabled for other flows; re-enable via the backlog item 2 link-rewrite epic;
     - hide Excalidraw+-specific UI when desktop: `ExportToExcalidrawPlus` menu/dialog mount and `ExcalidrawPlusPromoBanner` (both in `excalidraw-app/components/`), and guard `isExcalidrawPlusSignedUser`-dependent branches.
 - **AC**:
-  - [ ] Desktop build: no Live Collaboration trigger, no share-link entry/dialog, no Excalidraw+ promo/export UI; Sentry SDK never initializes (network tab / bundle absence of DSN).
-  - [ ] Web build: none of the above changes (all conditionals false-positive safe).
+  - [x] Desktop build: no Live Collaboration trigger, no share-link entry/dialog, no Excalidraw+ promo/export UI; Sentry SDK never initializes (network tab / bundle absence of DSN).
+  - [x] Web build: none of the above changes (all conditionals false-positive safe).
 
 #### D-18 | Offline/asset-origin audit
 
